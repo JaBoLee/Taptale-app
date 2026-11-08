@@ -8,7 +8,8 @@
     "submit": "Sign in",
     "working": "Signing in…",
     "forgot": "Forgot your password? Ask the owner to reset it",
-    "bad_login": "Wrong username or password"
+    "bad_login": "Wrong username or password",
+    "other_error": "Sign-in failed"
   },
   "setup": {
     "title": "Database not connected",

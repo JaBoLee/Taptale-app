@@ -54,7 +54,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (username: string, password: string) => {
     if (!supabase) return 'not_configured'
     const { error } = await supabase.auth.signInWithPassword({ email: usernameToEmail(username), password })
-    return error ? 'bad_login' : null
+    if (!error) return null
+    console.warn('[login]', error.status, error.message)
+    if (error.message === 'Invalid login credentials') return 'bad_login'
+    return `other:${error.status ?? ''} ${error.message}`
   }
 
   const signOut = async () => { await supabase?.auth.signOut() }

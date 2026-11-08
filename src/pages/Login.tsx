@@ -17,7 +17,7 @@ export default function Login() {
     setBusy(true)
     setError(null)
     const err = await signIn(username, password)
-    if (err) setError(err === 'not_configured' ? t('setup.title') : t('login.bad_login'))
+    if (err) setError(err === 'not_configured' ? t('setup.title') : err === 'bad_login' ? t('login.bad_login') : `${t('login.other_error')} (${err.slice(6)})`)
     setBusy(false)
   }
 
