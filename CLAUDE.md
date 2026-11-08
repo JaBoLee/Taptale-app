@@ -14,12 +14,14 @@
 ## สเปกระบบ
 
 
-## สถานะการตั้งค่า
-- GitHub: บัญชี `JaBoLee`, repo `JaBoLee/taptale-app` (Private, ว่าง)
-- Claude GitHub App ติดตั้งแล้ว (ตามที่บอสแจ้ง) แต่ add_repo ยังขึ้น "link your GitHub account"
-- ยังไม่ได้ต่อ: Supabase, Netlify, Google Cloud (Drive/Sheets), LINE OA
-- หน้าออกแบบ 16 หน้า: artifact "Tap&Tale App Screens" (https://claude.ai/artifact/5zxHrJkZ5a6rupbrPuxfk1)
-- PDF สำหรับหุ้นส่วน: TapAndTale-System-Plan.pdf (ยังเขียนว่า Claude หยิบของลงตะกร้า – ต้องแก้)
+## สถานะการตั้งค่า (8 พ.ย. 2569)
+- GitHub: `JaBoLee/Taptale-app` (Private) · Netlify auto-deploy จาก main → https://taptale.netlify.app (Public)
+- Supabase project ref `ddmltpvqvuvxqcflrrvj` (Singapore) · รัน migration 0001, 0002 แล้ว (ผ่าน SQL editor)
+- Edge Function `manage-users` deploy แล้ว (ผ่าน dashboard editor)
+- ปิด "Allow new users to sign up" แล้ว — สร้างบัญชีได้ทางเดียวคือเจ้าของผ่านแอป (/users)
+- บัญชีเจ้าของแรก: `boss` · แผน: เจ้าของ 5 คน พนักงาน 3 คน เจ้าของเพิ่ม/ลดเองในแอป
+- ยังไม่ได้ต่อ: Google Cloud (Drive/Sheets), LINE OA, AI อ่านใบเสร็จ
+- หน้าออกแบบ 16 หน้า: https://claude.ai/artifact/5zxHrJkZ5a6rupbrPuxfk1
 
 ## เทคโนโลยี
 React + Vite + TypeScript + Tailwind, PWA บน Netlify, Supabase (Postgres + Auth + RLS + Edge Functions + pg_cron), react-i18next (th/en/my), LINE OA Messaging API, Google service account สำหรับ Drive + Sheets
