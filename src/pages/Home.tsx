@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../lib/auth'
 import LangSwitch from '../components/LangSwitch'
@@ -27,6 +28,12 @@ export default function Home() {
         </section>
       ) : (
         <p role="alert" className="rounded-lg bg-warnbg px-3 py-2 text-sm text-warn">{t('home.no_profile')}</p>
+      )}
+
+      {profile?.role === 'owner' && (
+        <Link to="/users" className="flex h-12 items-center justify-center rounded-xl bg-ink text-[15px] font-semibold text-white">
+          {t('home.manage_users')}
+        </Link>
       )}
 
       <button type="button" onClick={signOut} className="h-12 rounded-xl border border-[#D9D6D0] bg-white text-[15px] font-semibold">

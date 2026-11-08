@@ -1,0 +1,163 @@
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { supabase } from '../lib/supabase'
+import { useAuth, type Role } from '../lib/auth'
+
+interface Row {
+  id: string
+  username: string
+  display_name: string
+  role: Role
+  active: boolean
+  wage_per_shift: number
+}
+
+const input = 'h-11 w-full rounded-[10px] border border-[#D9D6D0] bg-white px-3 text-[15px] text-ink'
+const btn = 'h-11 rounded-[10px] border border-[#D9D6D0] bg-white px-4 text-sm font-semibold'
+const btnP = 'h-11 rounded-[10px] bg-ink px-4 text-sm font-semibold text-white disabled:opacity-60'
+
+async function call(body: Record<string, unknown>) {
+  const { data, error } = await supabase!.functions.invoke('manage-users', { body })
+  if (error) {
+    let code = 'failed'
+    try { code = (await (error as { context?: Response }).context?.json())?.error ?? code } catch { /* ignore */ }
+    return code
+  }
+  return (data as { error?: string })?.error ?? null
+}
+
+export default function Users() {
+  const { t } = useTranslation()
+  const { profile } = useAuth()
+  const [rows, setRows] = useState<Row[]>([])
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [editing, setEditing] = useState<string | null>(null)
+  const [form, setForm] = useState({ username: '', display_name: '', password: '', role: 'staff' as Role, wage_per_shift: '' })
+  const [edit, setEdit] = useState({ display_name: '', role: 'staff' as Role, wage_per_shift: '', password: '' })
+
+  const load = useCallback(async () => {
+    const { data } = await supabase!.from('profiles').select('id, username, display_name, role, active, wage_per_shift').order('role').order('username')
+    setRows((data as Row[]) ?? [])
+  }, [])
+  useEffect(() => { load() }, [load])
+
+  const report = (err: string | null, okKey: string) => {
+    setMsg(err ? { ok: false, text: t(`users.err.${err}`, { defaultValue: t('users.err.failed') }) } : { ok: true, text: t(okKey) })
+  }
+
+  const create = async (e: FormEvent) => {
+    e.preventDefault()
+    setBusy(true)
+    const err = await call({ action: 'create', ...form, wage_per_shift: form.wage_per_shift === '' ? null : Number(form.wage_per_shift) })
+    report(err, 'users.created')
+    if (!err) { setForm({ username: '', display_name: '', password: '', role: 'staff', wage_per_shift: '' }); load() }
+    setBusy(false)
+  }
+
+  const startEdit = (r: Row) => {
+    setEditing(r.id)
+    setEdit({ display_name: r.display_name, role: r.role, wage_per_shift: String(r.wage_per_shift ?? ''), password: '' })
+    setMsg(null)
+  }
+
+  const save = async (r: Row) => {
+    setBusy(true)
+    const err = await call({ action: 'update', id: r.id, display_name: edit.display_name, role: edit.role,
+      wage_per_shift: edit.wage_per_shift === '' ? null : Number(edit.wage_per_shift), password: edit.password || undefined })
+    report(err, 'users.saved')
+    if (!err) { setEditing(null); load() }
+    setBusy(false)
+  }
+
+  const toggleActive = async (r: Row) => {
+    setBusy(true)
+    const err = await call({ action: 'update', id: r.id, active: !r.active })
+    report(err, 'users.saved')
+    if (!err) load()
+    setBusy(false)
+  }
+
+  const owners = rows.filter((r) => r.role === 'owner' && r.active).length
+  const staff = rows.filter((r) => r.role === 'staff' && r.active).length
+
+  return (
+    <main className="mx-auto flex min-h-full max-w-md flex-col gap-4 px-4 py-5">
+      <header className="flex items-center gap-2">
+        <Link to="/" aria-label={t('common.back')} className="-ml-3 flex h-11 w-11 items-center justify-center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+        </Link>
+        <div className="flex flex-col">
+          <h1 className="text-[22px] font-bold">{t('users.title')}</h1>
+          <span className="text-[13px] text-muted">{t('users.counts', { owners, staff })}</span>
+        </div>
+      </header>
+
+      {msg && (
+        <p role="status" className={`rounded-lg px-3 py-2 text-sm ${msg.ok ? 'bg-okbg text-ok' : 'bg-badbg text-bad'}`}>{msg.text}</p>
+      )}
+
+      <section className="flex flex-col gap-2">
+        {rows.map((r) => (
+          <div key={r.id} className={`flex flex-col gap-3 rounded-[14px] border border-line bg-white p-3.5 ${r.active ? '' : 'opacity-60'}`}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col">
+                <span className="text-[15px] font-semibold">{r.display_name}</span>
+                <span className="text-xs text-muted">{r.username} · {r.role === 'owner' ? t('home.owner') : t('home.staff')}{r.active ? '' : ` · ${t('users.disabled')}`}</span>
+              </div>
+              {editing !== r.id && <button type="button" className={btn} onClick={() => startEdit(r)}>{t('users.edit')}</button>}
+            </div>
+
+            {editing === r.id && (
+              <div className="flex flex-col gap-3">
+                <label className="flex flex-col gap-1 text-xs text-muted">{t('users.display_name')}
+                  <input className={input} value={edit.display_name} onChange={(e) => setEdit({ ...edit, display_name: e.target.value })} /></label>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <label className="flex flex-col gap-1 text-xs text-muted">{t('users.role')}
+                    <select className={input} value={edit.role} onChange={(e) => setEdit({ ...edit, role: e.target.value as Role })}>
+                      <option value="staff">{t('home.staff')}</option><option value="owner">{t('home.owner')}</option>
+                    </select></label>
+                  <label className="flex flex-col gap-1 text-xs text-muted">{t('users.wage')}
+                    <input className={input} inputMode="decimal" value={edit.wage_per_shift} onChange={(e) => setEdit({ ...edit, wage_per_shift: e.target.value })} /></label>
+                </div>
+                <label className="flex flex-col gap-1 text-xs text-muted">{t('users.new_password')}
+                  <input className={input} type="password" autoComplete="new-password" placeholder={t('users.password_hint')} value={edit.password} onChange={(e) => setEdit({ ...edit, password: e.target.value })} /></label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button type="button" className={btn} onClick={() => setEditing(null)}>{t('common.cancel')}</button>
+                  <button type="button" className={btn} disabled={busy || r.id === profile?.id} onClick={() => toggleActive(r)}>
+                    {r.active ? t('users.disable') : t('users.enable')}</button>
+                  <button type="button" className={btnP} disabled={busy} onClick={() => save(r)}>{t('common.save')}</button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </section>
+
+      <form onSubmit={create} className="flex flex-col gap-3 rounded-[14px] border border-line bg-white p-4">
+        <h2 className="text-[15px] font-semibold">{t('users.add')}</h2>
+        <div className="grid grid-cols-2 gap-2.5">
+          <label className="flex flex-col gap-1 text-xs text-muted">{t('login.username')}
+            <input className={input} required autoCapitalize="none" autoCorrect="off" pattern="[a-z0-9._\-]{3,30}" title={t('users.username_hint')}
+              value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase() })} /></label>
+          <label className="flex flex-col gap-1 text-xs text-muted">{t('users.display_name')}
+            <input className={input} value={form.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })} /></label>
+        </div>
+        <label className="flex flex-col gap-1 text-xs text-muted">{t('login.password')}
+          <input className={input} type="password" required minLength={8} autoComplete="new-password" placeholder={t('users.password_hint')}
+            value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
+        <div className="grid grid-cols-2 gap-2.5">
+          <label className="flex flex-col gap-1 text-xs text-muted">{t('users.role')}
+            <select className={input} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}>
+              <option value="staff">{t('home.staff')}</option><option value="owner">{t('home.owner')}</option>
+            </select></label>
+          <label className="flex flex-col gap-1 text-xs text-muted">{t('users.wage')}
+            <input className={input} inputMode="decimal" value={form.wage_per_shift} onChange={(e) => setForm({ ...form, wage_per_shift: e.target.value })} /></label>
+        </div>
+        <span className="text-xs text-muted">{t('users.username_hint')}</span>
+        <button type="submit" disabled={busy} className={btnP}>{t('users.add')}</button>
+      </form>
+    </main>
+  )
+}

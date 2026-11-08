@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './lib/auth'
 import { isConfigured } from './lib/supabase'
 import Login from './pages/Login'
 import Home from './pages/Home'
+import Users from './pages/Users'
 
 function NotConfigured() {
   const { t } = useTranslation()
@@ -16,12 +17,14 @@ function NotConfigured() {
 }
 
 function Routed() {
-  const { session, loading } = useAuth()
+  const { session, profile, loading } = useAuth()
+  const isOwner = profile?.role === 'owner'
   if (loading) return <div className="flex min-h-full items-center justify-center text-muted">…</div>
   return (
     <Routes>
       <Route path="/login" element={session ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={session ? <Home /> : <Navigate to="/login" replace />} />
+      <Route path="/users" element={session && isOwner ? <Users /> : <Navigate to="/" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
