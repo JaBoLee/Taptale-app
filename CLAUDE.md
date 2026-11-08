@@ -16,9 +16,11 @@
 
 ## สถานะการตั้งค่า (8 พ.ย. 2569)
 - GitHub: `JaBoLee/Taptale-app` (Private) · Netlify auto-deploy จาก main → https://taptale.netlify.app (Public)
-- Supabase project ref `ddmltpvqvuvxqcflrrvj` (Singapore) · รัน migration 0001, 0002 แล้ว (ผ่าน SQL editor)
+- Supabase project ref `ddmltpvqvuvxqcflrrvj` (Singapore) · รัน migration 0001–0004 แล้ว (ผ่าน SQL editor)
 - Edge Function `manage-users` deploy แล้ว (ผ่าน dashboard editor)
-- ปิด "Allow new users to sign up" แล้ว — สร้างบัญชีได้ทางเดียวคือเจ้าของผ่านแอป (/users)
+- สมัครเองได้ (Allow sign up เปิด, Confirm email ปิด) แต่บัญชีใหม่รออนุมัติ (active=false) จนเจ้าของอนุมัติใน /users
+- พิกัดร้าน 13.7055114, 100.5063924 รัศมี 100 ม. · photo bucket `photos` (private)
+- ฟีเจอร์หน้าจอครบตามสเปก (8 พ.ย.) ยกเว้นส่วนที่ต้องต่อบริการภายนอก
 - บัญชีเจ้าของแรก: `boss` · แผน: เจ้าของ 5 คน พนักงาน 3 คน เจ้าของเพิ่ม/ลดเองในแอป
 - ยังไม่ได้ต่อ: Google Cloud (Drive/Sheets), LINE OA, AI อ่านใบเสร็จ
 - หน้าออกแบบ 16 หน้า: https://claude.ai/artifact/5zxHrJkZ5a6rupbrPuxfk1
