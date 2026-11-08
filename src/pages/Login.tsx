@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../lib/auth'
 import LangSwitch from '../components/LangSwitch'
@@ -52,6 +53,7 @@ export default function Login() {
           {busy ? t('login.working') : t('login.submit')}
         </button>
       </form>
+      <Link to="/signup" className="flex h-12 items-center justify-center rounded-xl border border-[#D9D6D0] bg-white text-[15px] font-semibold text-ink">{t('signup.cta')}</Link>
       <p className="text-center text-[13px] text-muted">{t('login.forgot')}</p>
     </main>
   )

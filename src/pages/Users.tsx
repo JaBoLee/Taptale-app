@@ -12,6 +12,7 @@ interface Row {
   role: Role
   active: boolean
   wage_per_shift: number
+  approved_at: string | null
 }
 
 const input = 'h-11 w-full rounded-[10px] border border-[#D9D6D0] bg-white px-3 text-[15px] text-ink'
@@ -36,10 +37,11 @@ export default function Users() {
   const [busy, setBusy] = useState(false)
   const [editing, setEditing] = useState<string | null>(null)
   const [form, setForm] = useState({ username: '', display_name: '', password: '', role: 'staff' as Role, wage_per_shift: '' })
+  const [approveForm, setApproveForm] = useState<Record<string, { role: Role; wage: string }>>({})
   const [edit, setEdit] = useState({ display_name: '', role: 'staff' as Role, wage_per_shift: '', password: '' })
 
   const load = useCallback(async () => {
-    const { data } = await supabase!.from('profiles').select('id, username, display_name, role, active, wage_per_shift').order('role').order('username')
+    const { data } = await supabase!.from('profiles').select('id, username, display_name, role, active, wage_per_shift, approved_at').order('role').order('username')
     setRows((data as Row[]) ?? [])
   }, [])
   useEffect(() => { load() }, [load])
@@ -80,6 +82,25 @@ export default function Users() {
     setBusy(false)
   }
 
+  const approve = async (r: Row) => {
+    const f = approveForm[r.id] ?? { role: 'staff' as Role, wage: '' }
+    setBusy(true)
+    const err = await call({ action: 'update', id: r.id, active: true, role: f.role, wage_per_shift: f.wage === '' ? null : Number(f.wage) })
+    report(err, 'users.approved')
+    if (!err) load()
+    setBusy(false)
+  }
+
+  const reject = async (r: Row) => {
+    setBusy(true)
+    const err = await call({ action: 'reject', id: r.id })
+    report(err, 'users.rejected')
+    if (!err) load()
+    setBusy(false)
+  }
+
+  const pendingRows = rows.filter((r) => !r.active && !r.approved_at)
+  const memberRows = rows.filter((r) => r.active || r.approved_at)
   const owners = rows.filter((r) => r.role === 'owner' && r.active).length
   const staff = rows.filter((r) => r.role === 'staff' && r.active).length
 
@@ -99,8 +120,38 @@ export default function Users() {
         <p role="status" className={`rounded-lg px-3 py-2 text-sm ${msg.ok ? 'bg-okbg text-ok' : 'bg-badbg text-bad'}`}>{msg.text}</p>
       )}
 
+      {pendingRows.length > 0 && (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-[15px] font-semibold">{t('users.pending')} ({pendingRows.length})</h2>
+          {pendingRows.map((r) => {
+            const f = approveForm[r.id] ?? { role: 'staff' as Role, wage: '' }
+            const setF = (v: Partial<typeof f>) => setApproveForm({ ...approveForm, [r.id]: { ...f, ...v } })
+            return (
+              <div key={r.id} className="flex flex-col gap-3 rounded-[14px] border border-[#E3C9A4] bg-white p-3.5">
+                <div className="flex flex-col">
+                  <span className="text-[15px] font-semibold">{r.display_name}</span>
+                  <span className="text-xs text-muted">{r.username}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <label className="flex flex-col gap-1 text-xs text-muted">{t('users.role')}
+                    <select className={input} value={f.role} onChange={(e) => setF({ role: e.target.value as Role })}>
+                      <option value="staff">{t('home.staff')}</option><option value="owner">{t('home.owner')}</option>
+                    </select></label>
+                  <label className="flex flex-col gap-1 text-xs text-muted">{t('users.wage')}
+                    <input className={input} inputMode="decimal" value={f.wage} onChange={(e) => setF({ wage: e.target.value })} /></label>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" className={btn} disabled={busy} onClick={() => reject(r)}>{t('users.reject')}</button>
+                  <button type="button" className={btnP} disabled={busy} onClick={() => approve(r)}>{t('users.approve')}</button>
+                </div>
+              </div>
+            )
+          })}
+        </section>
+      )}
+
       <section className="flex flex-col gap-2">
-        {rows.map((r) => (
+        {memberRows.map((r) => (
           <div key={r.id} className={`flex flex-col gap-3 rounded-[14px] border border-line bg-white p-3.5 ${r.active ? '' : 'opacity-60'}`}>
             <div className="flex items-center justify-between gap-3">
               <div className="flex flex-col">

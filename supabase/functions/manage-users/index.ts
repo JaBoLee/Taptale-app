@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
   if (body.action === 'update') {
     const id = String(body.id ?? '')
     if (!id) return json({ error: 'bad_id' }, 400)
-    const { data: target } = await admin.from('profiles').select('id, role, active').eq('id', id).single()
+    const { data: target } = await admin.from('profiles').select('id, role, active, approved_at').eq('id', id).single()
     if (!target) return json({ error: 'not_found' }, 404)
 
     const patch: Record<string, unknown> = {}
@@ -69,6 +69,7 @@ Deno.serve(async (req) => {
     if (body.role === 'owner' || body.role === 'staff') patch.role = body.role
     if (typeof body.active === 'boolean') patch.active = body.active
     if (body.wage_per_shift != null) patch.wage_per_shift = Number(body.wage_per_shift) || 0
+    if (patch.active === true && !target.approved_at) patch.approved_at = new Date().toISOString()
 
     const losingOwner = target.role === 'owner' && target.active && (patch.role === 'staff' || patch.active === false)
     if (losingOwner && (await activeOwners(id)) === 0) return json({ error: 'last_owner' }, 400)
@@ -91,6 +92,16 @@ Deno.serve(async (req) => {
       const { error } = await admin.auth.admin.updateUserById(id, authPatch)
       if (error) return json({ error: 'auth_update_failed' }, 400)
     }
+    return json({ ok: true })
+  }
+
+  if (body.action === 'reject') {
+    const id = String(body.id ?? '')
+    const { data: target } = await admin.from('profiles').select('approved_at').eq('id', id).single()
+    if (!target) return json({ error: 'not_found' }, 404)
+    if (target.approved_at) return json({ error: 'not_pending' }, 400)
+    const { error } = await admin.auth.admin.deleteUser(id)
+    if (error) return json({ error: 'delete_failed' }, 400)
     return json({ ok: true })
   }
 

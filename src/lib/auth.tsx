@@ -10,6 +10,8 @@ export interface Profile {
   display_name: string
   role: Role
   lang: 'th' | 'en' | 'my'
+  active: boolean
+  approved_at: string | null
 }
 
 interface AuthState {
@@ -17,6 +19,7 @@ interface AuthState {
   profile: Profile | null
   loading: boolean
   signIn: (username: string, password: string) => Promise<string | null>
+  signUp: (username: string, displayName: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
   setLang: (lang: Profile['lang']) => Promise<void>
 }
@@ -40,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true)
     supabase
       .from('profiles')
-      .select('id, username, display_name, role, lang')
+      .select('id, username, display_name, role, lang, active, approved_at')
       .eq('id', session.user.id)
       .single()
       .then(({ data }) => {
@@ -60,6 +63,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return `other:${error.status ?? ''} ${error.message}`
   }
 
+  const signUp = async (username: string, displayName: string, password: string) => {
+    if (!supabase) return 'not_configured'
+    const u = username.trim().toLowerCase()
+    if (!/^[a-z0-9._-]{3,30}$/.test(u)) return 'bad_username'
+    if (password.length < 8) return 'weak_password'
+    const { data, error } = await supabase.auth.signUp({
+      email: usernameToEmail(u), password, options: { data: { display_name: displayName.trim() || u } },
+    })
+    if (error) {
+      console.warn('[signup]', error.status, error.message)
+      return /already/i.test(error.message) ? 'username_taken' : 'failed'
+    }
+    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) return 'username_taken'
+    return null
+  }
+
   const signOut = async () => { await supabase?.auth.signOut() }
 
   const setLang = async (lang: Profile['lang']) => {
@@ -72,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, profile, loading, signIn, signOut, setLang }}>
+    <AuthContext.Provider value={{ session, profile, loading, signIn, signUp, signOut, setLang }}>
       {children}
     </AuthContext.Provider>
   )

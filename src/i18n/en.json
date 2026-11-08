@@ -22,7 +22,13 @@
     "soon": "Features are being built — this version is for testing sign-in and languages",
     "no_profile": "This account has no user profile yet. Please contact the owner",
     "logout": "Sign out",
-    "manage_users": "Manage user accounts"
+    "manage_users": "Manage user accounts",
+    "pending_title": "Waiting for owner approval",
+    "pending_body": "You're signed up. You can start once an owner approves you (sign out and back in if nothing changes)",
+    "disabled_title": "Account disabled",
+    "disabled_body": "Contact the owner if you think this is a mistake",
+    "pending_owner": "{{count}} sign-up(s) waiting for approval",
+    "review": "Review"
   },
   "lang": {
     "label": "Language"
@@ -55,12 +61,27 @@
       "username_taken": "This username is already taken",
       "last_owner": "At least one active owner is required",
       "cannot_disable_self": "You can't disable your own account",
-      "forbidden": "Owners only"
-    }
+      "forbidden": "Owners only",
+      "not_pending": "This account isn't pending"
+    },
+    "pending": "Waiting for approval",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approved": "Approved",
+    "rejected": "Rejected"
   },
   "pw": {
     "show": "Show password",
     "hide": "Hide password",
     "keyboard": "Your keyboard is typing Thai/Burmese — passwords are usually in English"
+  },
+  "signup": {
+    "title": "Create account",
+    "intro": "Fill in your details, then wait for an owner to approve your account",
+    "confirm": "Confirm password",
+    "mismatch": "Passwords don't match",
+    "submit": "Sign up",
+    "cta": "No account yet? Sign up",
+    "have_account": "Already have an account? Sign in"
   }
 }
