@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../lib/auth'
 import LangSwitch from '../components/LangSwitch'
+import PasswordInput from '../components/PasswordInput'
 
 export default function Login() {
   const { t } = useTranslation()
@@ -36,11 +37,11 @@ export default function Login() {
             autoComplete="username" autoCapitalize="none" autoCorrect="off" required
             value={username} onChange={(e) => setUsername(e.target.value)}
           />
+          {/[฀-๿က-႟]/.test(username) && <span role="alert" className="text-xs text-warn">{t('pw.keyboard')}</span>}
         </label>
         <label className="flex flex-col gap-1.5 text-[13px] text-muted">
           {t('login.password')}
-          <input
-            type="password"
+          <PasswordInput
             className="h-12 rounded-[10px] border border-[#D9D6D0] bg-white px-3 text-base text-ink"
             autoComplete="current-password" required
             value={password} onChange={(e) => setPassword(e.target.value)}

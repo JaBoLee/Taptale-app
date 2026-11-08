@@ -56,5 +56,10 @@
       "cannot_disable_self": "You can't disable your own account",
       "forbidden": "Owners only"
     }
+  },
+  "pw": {
+    "show": "Show password",
+    "hide": "Hide password",
+    "keyboard": "Your keyboard is typing Thai/Burmese — passwords are usually in English"
   }
 }

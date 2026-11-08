@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useAuth, type Role } from '../lib/auth'
+import PasswordInput from '../components/PasswordInput'
 
 interface Row {
   id: string
@@ -122,7 +123,7 @@ export default function Users() {
                     <input className={input} inputMode="decimal" value={edit.wage_per_shift} onChange={(e) => setEdit({ ...edit, wage_per_shift: e.target.value })} /></label>
                 </div>
                 <label className="flex flex-col gap-1 text-xs text-muted">{t('users.new_password')}
-                  <input className={input} type="password" autoComplete="new-password" placeholder={t('users.password_hint')} value={edit.password} onChange={(e) => setEdit({ ...edit, password: e.target.value })} /></label>
+                  <PasswordInput className={input} autoComplete="new-password" placeholder={t('users.password_hint')} value={edit.password} onChange={(e) => setEdit({ ...edit, password: e.target.value })} /></label>
                 <div className="grid grid-cols-3 gap-2">
                   <button type="button" className={btn} onClick={() => setEditing(null)}>{t('common.cancel')}</button>
                   <button type="button" className={btn} disabled={busy || r.id === profile?.id} onClick={() => toggleActive(r)}>
@@ -145,7 +146,7 @@ export default function Users() {
             <input className={input} value={form.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })} /></label>
         </div>
         <label className="flex flex-col gap-1 text-xs text-muted">{t('login.password')}
-          <input className={input} type="password" required minLength={8} autoComplete="new-password" placeholder={t('users.password_hint')}
+          <PasswordInput className={input} required minLength={8} autoComplete="new-password" placeholder={t('users.password_hint')}
             value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
         <div className="grid grid-cols-2 gap-2.5">
           <label className="flex flex-col gap-1 text-xs text-muted">{t('users.role')}
