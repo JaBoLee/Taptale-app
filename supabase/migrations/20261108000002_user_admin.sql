@@ -13,8 +13,9 @@ begin
 end $$;
 
 -- ให้ Edge Function (service_role) แก้ role/สถานะได้ ส่วนพนักงานยังถูกล็อกเหมือนเดิม
+-- ต้องเป็น security invoker เพื่อให้ current_user คือ role ของผู้เรียกจริง (authenticated / service_role)
 create or replace function public.protect_profile_fields() returns trigger
-language plpgsql security definer set search_path = public as $$
+language plpgsql security invoker set search_path = public as $$
 begin
   if not public.is_owner() and current_user not in ('service_role', 'postgres', 'supabase_admin') then
     new.role := old.role;
