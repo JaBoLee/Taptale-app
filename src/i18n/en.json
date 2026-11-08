@@ -1,0 +1,24 @@
+{
+  "app": { "tagline": "Back office" },
+  "login": {
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign in",
+    "working": "Signing in…",
+    "forgot": "Forgot your password? Ask the owner to reset it",
+    "bad_login": "Wrong username or password"
+  },
+  "setup": {
+    "title": "Database not connected",
+    "body": "Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Netlify, then redeploy"
+  },
+  "home": {
+    "hello": "Hi {{name}}",
+    "owner": "Owner",
+    "staff": "Staff",
+    "soon": "Features are being built — this version is for testing sign-in and languages",
+    "no_profile": "This account has no user profile yet. Please contact the owner",
+    "logout": "Sign out"
+  },
+  "lang": { "label": "Language" }
+}
