@@ -124,7 +124,7 @@ export default function Home() {
   const marketList = data && market ? needList(data, market.id) : []
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-col gap-3 px-4 pb-28 pt-5">
+    <main className="mx-auto flex w-full max-w-md flex-col gap-3 px-4 pb-[calc(7rem+var(--badge-h,0px))] pt-5">
       {header}
       <InstallApp />
       <ClockCard />

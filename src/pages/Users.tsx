@@ -105,7 +105,7 @@ export default function Users() {
   const staff = rows.filter((r) => r.role === 'staff' && r.active).length
 
   return (
-    <main className="mx-auto flex min-h-full max-w-md flex-col gap-4 px-4 pb-28 pt-5">
+    <main className="mx-auto flex min-h-full max-w-md flex-col gap-4 px-4 pb-[calc(7rem+var(--badge-h,0px))] pt-5">
       <header className="flex items-center gap-2">
         <Link to="/owner" aria-label={t('common.back')} className="-ml-3 flex h-11 w-11 items-center justify-center">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>

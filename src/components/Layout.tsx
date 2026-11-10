@@ -26,7 +26,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-full">
       {children}
-      <nav aria-label={t('nav.label')} className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-white pb-[env(safe-area-inset-bottom)]">
+      <nav aria-label={t('nav.label')} className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-white pb-[max(env(safe-area-inset-bottom),var(--badge-h,0px))]">
         <div className="mx-auto grid max-w-md grid-cols-5">
           {tabs.map((tab) => (
             <NavLink key={tab.to} to={tab.to} end={tab.to === '/'}

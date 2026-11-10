@@ -8,7 +8,7 @@ export const numCls = 'h-11 w-24 rounded-[10px] border border-[#D9D6D0] bg-white
 export function Page({ title, subtitle, back, right, children }: { title: string; subtitle?: string; back?: string; right?: ReactNode; children: ReactNode }) {
   const { t } = useTranslation()
   return (
-    <main className="mx-auto flex w-full max-w-md flex-col gap-3 px-4 pb-28 pt-5">
+    <main className="mx-auto flex w-full max-w-md flex-col gap-3 px-4 pb-[calc(7rem+var(--badge-h,0px))] pt-5">
       <header className="flex items-center gap-1.5">
         {back && (
           <Link to={back} aria-label={t('common.back')} className="-ml-3 flex h-11 w-11 shrink-0 items-center justify-center">
