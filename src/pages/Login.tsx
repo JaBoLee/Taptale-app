@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../lib/auth'
 import LangSwitch from '../components/LangSwitch'
 import PasswordInput from '../components/PasswordInput'
+import InstallApp from '../components/InstallApp'
 
 export default function Login() {
   const { t } = useTranslation()
@@ -55,6 +56,7 @@ export default function Login() {
       </form>
       <Link to="/signup" className="flex h-12 items-center justify-center rounded-xl border border-[#D9D6D0] bg-white text-[15px] font-semibold text-ink">{t('signup.cta')}</Link>
       <p className="text-center text-[13px] text-muted">{t('login.forgot')}</p>
+      <InstallApp />
     </main>
   )
 }

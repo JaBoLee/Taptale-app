@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../lib/auth'
 import { sb, pickName, uploadPhoto, fmtTime, fmtNum, ymd } from '../lib/db'
 import { useStockData } from '../lib/stock'
+import { pushOrders } from '../lib/gsync'
 import { Button, Card, Field, Loading, Msg, Page, Row, Seg, inputCls } from '../components/ui'
 
 const REASONS = ['expired', 'spoiled', 'dropped', 'wrong_order', 'other'] as const
@@ -43,7 +44,7 @@ export default function Waste() {
       })
       if (error) throw error
       setMsg({ ok: true, text: t('waste.saved') })
-      setQty(''); setNote(''); setFile(null); reload(); loadRecent()
+      setQty(''); setNote(''); setFile(null); reload(); loadRecent(); pushOrders()
     } catch {
       setMsg({ ok: false, text: t('common.save_failed') })
     }

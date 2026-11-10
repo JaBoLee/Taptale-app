@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { sb, pickName, fmtNum } from '../lib/db'
 import { useStockData, isLow, qtyOf, type Item } from '../lib/stock'
+import { autoTranslate } from '../lib/translate'
 import { Button, Card, Empty, Field, Loading, Msg, Page, Pill, Row, Seg, inputCls } from '../components/ui'
 
 export function ItemList() {
@@ -40,6 +41,7 @@ export function ItemEdit() {
   const { data } = useStockData()
   const [f, setF] = useState({ name_th: '', name_en: '', name_my: '', category: 'food' as Item['category'], count_unit: '', safety_stock: '0', default_supplier_id: '', active: true })
   const [sps, setSps] = useState<SP[]>([])
+  const [tr, setTr] = useState(false)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
@@ -57,10 +59,22 @@ export function ItemEdit() {
   const weekday = (d: number) => t(`days.d${d}`)
   const usedIn = isNew ? [] : data.lines.filter((l) => l.item_id === id).map((l) => ({ menu: data.menus.find((m) => m.id === l.menu_id), qty: l.qty }))
 
+  const fillTr = async (force: boolean) => {
+    if (!f.name_th.trim() || (!force && f.name_en.trim() && f.name_my.trim())) return f
+    setTr(true)
+    const r = await autoTranslate([f.name_th], 'ingredient')
+    setTr(false)
+    if (!r) { if (force) setMsg({ ok: false, text: t('tr.failed') }); return f }
+    const nf = { ...f, name_en: force || !f.name_en.trim() ? r.en[0] : f.name_en, name_my: force || !f.name_my.trim() ? r.my[0] : f.name_my }
+    setF(nf)
+    return nf
+  }
+
   const save = async () => {
     if (!f.name_th.trim() || !f.count_unit.trim()) { setMsg({ ok: false, text: t('items.need') }); return }
     setBusy(true)
-    const row = { name_th: f.name_th.trim(), name_en: f.name_en.trim() || null, name_my: f.name_my.trim() || null, category: f.category,
+    const g = await fillTr(false)
+    const row = { name_th: g.name_th.trim(), name_en: g.name_en.trim() || null, name_my: g.name_my.trim() || null, category: f.category,
       count_unit: f.count_unit.trim(), safety_stock: Number(f.safety_stock) || 0, default_supplier_id: f.default_supplier_id || null, active: f.active }
     let itemId = id as string
     if (isNew) {
@@ -90,12 +104,15 @@ export function ItemEdit() {
   return (
     <Page title={isNew ? t('items.new') : t('items.edit')} back="/items">
       <Card>
-        <Field label={t('items.name_th')} hint={t('items.name_hint')}><input className={inputCls} value={f.name_th} onChange={(e) => setF({ ...f, name_th: e.target.value })} /></Field>
+        <Field label={t('items.name_th')} hint={t('items.name_hint')}><input className={inputCls} value={f.name_th} onChange={(e) => setF({ ...f, name_th: e.target.value })} onBlur={() => fillTr(false)} /></Field>
         <div className="grid grid-cols-2 gap-2.5">
           <Field label="English"><input className={inputCls} value={f.name_en} onChange={(e) => setF({ ...f, name_en: e.target.value })} /></Field>
           <Field label="မြန်မာ"><input className={inputCls} value={f.name_my} onChange={(e) => setF({ ...f, name_my: e.target.value })} /></Field>
         </div>
-        <span className="text-[11px] text-muted">{t('items.lang_hint')}</span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] text-muted">{tr ? t('tr.working') : t('tr.hint')}</span>
+          <Button small disabled={tr || !f.name_th.trim()} onClick={() => fillTr(true)}>{t('tr.again')}</Button>
+        </div>
         <div className="grid grid-cols-2 gap-2.5">
           <Field label={t('stock.category')}>
             <select className={inputCls} value={f.category} onChange={(e) => setF({ ...f, category: e.target.value as Item['category'] })}>

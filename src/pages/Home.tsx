@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth'
 import { sb, fmtTime, ymd, pickName, fmtNum, loadShiftTypes, type ShiftType } from '../lib/db'
 import { useStockData, menuAvailable, needList } from '../lib/stock'
 import LangSwitch from '../components/LangSwitch'
+import InstallApp from '../components/InstallApp'
 import { Button, Card, LinkButton, Msg, Pill, Row } from '../components/ui'
 
 interface Att { kind: 'in' | 'out'; at: string; distance_m: number }
@@ -125,6 +126,7 @@ export default function Home() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-col gap-3 px-4 pb-28 pt-5">
       {header}
+      <InstallApp />
       <ClockCard />
 
       <div className="grid grid-cols-3 gap-2">

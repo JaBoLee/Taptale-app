@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { sb, pickName, fmtNum, fmtDateTime } from '../lib/db'
 import { useStockData, needList } from '../lib/stock'
+import { pushOrders } from '../lib/gsync'
 import { Button, Card, Empty, Loading, Msg, Page, Pill, Row } from '../components/ui'
 
 interface Mark { id: string; supplier_product_id: string; packs: number | null; status: 'ordered' | 'received'; created_at: string }
@@ -29,6 +30,7 @@ export default function Orders() {
     const { error } = await sb.from('purchase_marks').insert({ supplier_product_id: spId, packs })
     setMsg(error ? { ok: false, text: t('common.save_failed') } : { ok: true, text: t('orders.marked') })
     await loadMarks()
+    pushOrders()
     setBusy(false)
   }
 
@@ -41,6 +43,7 @@ export default function Orders() {
     const b = await sb.from('purchase_marks').update({ status: 'received' }).eq('id', m.id)
     setMsg(a.error || b.error ? { ok: false, text: t('common.save_failed') } : { ok: true, text: t('orders.received_ok') })
     await Promise.all([loadMarks(), reload()])
+    pushOrders()
     setBusy(false)
   }
 

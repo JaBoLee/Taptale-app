@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { sb, loadSettings, loadShiftTypes, type Settings as S, type ShiftType } from '../lib/db'
 import { Button, Card, Field, Loading, Msg, Page, Row, inputCls } from '../components/ui'
+import { backupNow } from '../lib/gsync'
 
 const num = (v: string) => (v.trim() === '' ? 0 : Number(v))
 
@@ -11,6 +12,9 @@ export default function Settings() {
   const [shifts, setShifts] = useState<ShiftType[]>([])
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [gUrl, setGUrl] = useState<string | null>(null)
+  const [gMsg, setGMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [gBusy, setGBusy] = useState(false)
 
   useEffect(() => {
     Promise.all([loadSettings(), loadShiftTypes()]).then(([v, st]) => {
@@ -25,6 +29,7 @@ export default function Settings() {
         glasses: (v.glass_sizes_ml ?? [500]).join(', '),
       })
       setShifts(st)
+      setGUrl((v as Record<string, { sheet_url?: string }>).google?.sheet_url ?? null)
     })
   }, [])
 
@@ -97,6 +102,19 @@ export default function Settings() {
       </Card>
       <Msg msg={msg} />
       <Button variant="primary" disabled={busy} onClick={save}>{t('common.save')}</Button>
+      <Card>
+        <span className="text-[15px] font-semibold">{t('gs.title')}</span>
+        <span className="text-xs text-muted">{t('gs.body')}</span>
+        {gUrl && <a href={gUrl} target="_blank" rel="noreferrer" className="flex min-h-11 items-center text-sm font-semibold underline">{t('gs.open')}</a>}
+        <Msg msg={gMsg} />
+        <Button disabled={gBusy} onClick={async () => {
+          setGBusy(true); setGMsg(null)
+          const r = await backupNow()
+          setGMsg(r.ok ? { ok: true, text: t('gs.done') } : { ok: false, text: r.detail === 'google_not_connected' ? t('gs.not_connected') : t('gs.failed') })
+          if (r.sheet_url) setGUrl(r.sheet_url)
+          setGBusy(false)
+        }}>{gBusy ? t('gs.working') : t('gs.now')}</Button>
+      </Card>
     </Page>
   )
 }

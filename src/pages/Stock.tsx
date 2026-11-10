@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { sb, pickName, fmtNum, fmtDateTime } from '../lib/db'
 import { useStockData, isLow, qtyOf, type Item } from '../lib/stock'
+import { pushOrders } from '../lib/gsync'
 import { Button, Card, Empty, LinkButton, Loading, Msg, Page, Pill, Seg, inputCls, numCls } from '../components/ui'
 
 type Cat = Item['category']
@@ -38,7 +39,7 @@ export default function Stock() {
     const rows = filled.map(([item_id, v]) => ({ item_id, kind: mode, qty: Number(v) }))
     const { error } = await sb.from('stock_events').insert(rows)
     setMsg(error ? { ok: false, text: t('common.save_failed') } : { ok: true, text: t('stock.saved', { count: rows.length }) })
-    if (!error) { setVals({}); reload() }
+    if (!error) { setVals({}); reload(); pushOrders() }
     setBusy(false)
   }
 

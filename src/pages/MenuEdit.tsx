@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { sb, pickName } from '../lib/db'
 import { useStockData } from '../lib/stock'
+import { autoTranslate } from '../lib/translate'
 import { Button, Card, Field, Loading, Msg, Page, inputCls } from '../components/ui'
 
 interface Line { item_id: string; qty: string }
@@ -15,6 +16,7 @@ export default function MenuEdit() {
   const { data } = useStockData()
   const [f, setF] = useState({ name_th: '', name_en: '', name_my: '', steps_th: '', steps_en: '', steps_my: '', min_portions: '1', active: true })
   const [lines, setLines] = useState<Line[]>([])
+  const [tr, setTr] = useState(false)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
@@ -29,11 +31,31 @@ export default function MenuEdit() {
 
   if (!data) return <Page title={t('menuedit.title')} back="/recipes"><Loading /></Page>
 
+  const fillTr = async (force: boolean) => {
+    const needName = !!f.name_th.trim() && (force || !f.name_en.trim() || !f.name_my.trim())
+    const needSteps = !!f.steps_th.trim() && (force || !f.steps_en.trim() || !f.steps_my.trim())
+    if (!needName && !needSteps) return f
+    setTr(true)
+    const [n, st] = await Promise.all([
+      needName ? autoTranslate([f.name_th], 'menu') : Promise.resolve(null),
+      needSteps ? autoTranslate([f.steps_th], 'steps') : Promise.resolve(null),
+    ])
+    setTr(false)
+    if (force && !n && !st) setMsg({ ok: false, text: t('tr.failed') })
+    const pick = (cur: string, v: string | undefined) => (v && (force || !cur.trim()) ? v : cur)
+    const nf = { ...f,
+      name_en: pick(f.name_en, n?.en[0]), name_my: pick(f.name_my, n?.my[0]),
+      steps_en: pick(f.steps_en, st?.en[0]), steps_my: pick(f.steps_my, st?.my[0]) }
+    setF(nf)
+    return nf
+  }
+
   const save = async () => {
     if (!f.name_th.trim()) { setMsg({ ok: false, text: t('menuedit.need_name') }); return }
     setBusy(true)
-    const row = { name_th: f.name_th.trim(), name_en: f.name_en.trim() || null, name_my: f.name_my.trim() || null,
-      steps_th: f.steps_th || null, steps_en: f.steps_en || null, steps_my: f.steps_my || null,
+    const g = await fillTr(false)
+    const row = { name_th: g.name_th.trim(), name_en: g.name_en.trim() || null, name_my: g.name_my.trim() || null,
+      steps_th: g.steps_th || null, steps_en: g.steps_en || null, steps_my: g.steps_my || null,
       min_portions: Math.max(1, Number(f.min_portions) || 1), active: f.active }
     let menuId = id as string
     if (isNew) {
@@ -69,12 +91,15 @@ export default function MenuEdit() {
   return (
     <Page title={isNew ? t('menuedit.new') : t('menuedit.title')} back="/recipes">
       <Card>
-        <Field label={t('items.name_th')}><input className={inputCls} value={f.name_th} onChange={(e) => setF({ ...f, name_th: e.target.value })} /></Field>
+        <Field label={t('items.name_th')}><input className={inputCls} value={f.name_th} onChange={(e) => setF({ ...f, name_th: e.target.value })} onBlur={() => fillTr(false)} /></Field>
         <div className="grid grid-cols-2 gap-2.5">
           <Field label="English"><input className={inputCls} value={f.name_en} onChange={(e) => setF({ ...f, name_en: e.target.value })} /></Field>
           <Field label="မြန်မာ"><input className={inputCls} value={f.name_my} onChange={(e) => setF({ ...f, name_my: e.target.value })} /></Field>
         </div>
-        <span className="text-[11px] text-muted">{t('items.lang_hint')}</span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] text-muted">{tr ? t('tr.working') : t('tr.hint')}</span>
+          <Button small disabled={tr || (!f.name_th.trim() && !f.steps_th.trim())} onClick={() => fillTr(true)}>{t('tr.again')}</Button>
+        </div>
         <Field label={t('menuedit.min')} hint={t('menuedit.min_hint')}>
           <input className={inputCls} inputMode="numeric" value={f.min_portions} onChange={(e) => setF({ ...f, min_portions: e.target.value })} />
         </Field>
@@ -109,7 +134,7 @@ export default function MenuEdit() {
 
       <Card>
         <span className="text-[15px] font-semibold">{t('menuedit.steps')}</span>
-        <Field label="ไทย"><textarea className={`${inputCls} h-28 py-2`} value={f.steps_th} onChange={(e) => setF({ ...f, steps_th: e.target.value })} /></Field>
+        <Field label="ไทย"><textarea className={`${inputCls} h-28 py-2`} value={f.steps_th} onChange={(e) => setF({ ...f, steps_th: e.target.value })} onBlur={() => fillTr(false)} /></Field>
         <Field label="English"><textarea className={`${inputCls} h-20 py-2`} value={f.steps_en} onChange={(e) => setF({ ...f, steps_en: e.target.value })} /></Field>
         <Field label="မြန်မာ"><textarea className={`${inputCls} h-20 py-2`} value={f.steps_my} onChange={(e) => setF({ ...f, steps_my: e.target.value })} /></Field>
       </Card>

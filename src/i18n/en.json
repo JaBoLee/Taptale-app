@@ -492,5 +492,28 @@
     "l_menus": "Menus & recipes",
     "l_settings": "Settings",
     "integrations": "Still to connect: Google Drive/Sheet (07:00 backup, to-order tab), LINE OA (alerts), AI receipt/slip reading"
+  },
+  "tr": {
+    "hint": "Type Thai — English/Burmese are filled in automatically (editable)",
+    "working": "Translating…",
+    "again": "Re-translate",
+    "failed": "Auto-translate failed — you can type it yourself"
+  },
+  "install": {
+    "title": "Install the app",
+    "body": "Open it from your home screen like any app",
+    "btn": "Install",
+    "later": "Later",
+    "ios": "On iPhone: tap Share in Safari → \"Add to Home Screen\" → \"Add\""
+  },
+  "gs": {
+    "title": "Google Sheet / Drive",
+    "body": "Automatic backup daily at 07:00 · the \"to order\" tab updates whenever stock is counted or ordered · receipt photos go to Drive",
+    "open": "Open the shop Google Sheet",
+    "now": "Back up now",
+    "working": "Sending to Google…",
+    "done": "Backup complete",
+    "failed": "Backup failed — try again later",
+    "not_connected": "Google is not connected yet"
   }
 }
