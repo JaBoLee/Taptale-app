@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { sb, pickName, fmtNum, fmtDateTime } from '../lib/db'
@@ -26,7 +26,8 @@ export default function Stock() {
     return data.items
       .filter((it) => it.active && it.category === cat)
       .filter((it) => !s || [it.name_th, it.name_en, it.name_my].some((n) => n?.toLowerCase().includes(s)))
-      .sort((a, b) => Number(isLow(data, b)) - Number(isLow(data, a)) || a.name_th.localeCompare(b.name_th))
+      // เรียงตามจุดเก็บและลำดับเดินนับ (เหมือนชีตเดิม); ไม่มีจุดเก็บไว้ท้ายสุด
+      .sort((a, b) => (a.location ?? '\uffff').localeCompare(b.location ?? '\uffff') || a.sort_order - b.sort_order || a.name_th.localeCompare(b.name_th))
   }, [data, cat, q])
 
   if (!data) return <Page title={t('stock.title')}><Loading /></Page>
@@ -52,11 +53,14 @@ export default function Stock() {
       <input className={inputCls} type="search" placeholder={t('common.search')} aria-label={t('common.search')} value={q} onChange={(e) => setQ(e.target.value)} />
       <Msg msg={msg} />
       {list.length === 0 && <Empty>{t('stock.empty')}</Empty>}
-      {list.map((it) => {
+      {list.map((it, i) => {
         const low = isLow(data, it)
+        const head = (it.location ?? '') !== (list[i - 1]?.location ?? '') || i === 0
         const sp = data.products.find((p) => p.item_id === it.id && p.supplier_id === it.default_supplier_id)
         return (
-          <Card key={it.id} tone={low ? 'bad' : undefined} className="!flex-row items-center !gap-3 !p-3.5">
+          <Fragment key={it.id}>
+          {head && <h2 className="mt-2 text-sm font-bold text-muted">{it.location ? it.location.replace(/_/g, ' · ') : t('stock.no_location')}</h2>}
+          <Card tone={low ? 'bad' : undefined} className="!flex-row items-center !gap-3 !p-3.5">
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="text-[15px] font-semibold">{pickName(it)}</span>
               {sp && <span className="truncate text-xs text-muted">{supplierName(sp.supplier_id)}: {sp.product_name}</span>}
@@ -69,6 +73,7 @@ export default function Stock() {
               {it.count_unit}
             </label>
           </Card>
+          </Fragment>
         )
       })}
       <div className="sticky bottom-16 z-10 grid grid-cols-2 gap-2 bg-paper py-2">

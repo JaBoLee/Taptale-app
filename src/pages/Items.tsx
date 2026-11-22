@@ -39,7 +39,7 @@ export function ItemEdit() {
   const nav = useNavigate()
   const isNew = id === 'new'
   const { data } = useStockData()
-  const [f, setF] = useState({ name_th: '', name_en: '', name_my: '', category: 'food' as Item['category'], count_unit: '', safety_stock: '0', default_supplier_id: '', active: true })
+  const [f, setF] = useState({ name_th: '', name_en: '', name_my: '', category: 'food' as Item['category'], count_unit: '', safety_stock: '0', default_supplier_id: '', active: true, location: '' })
   const [sps, setSps] = useState<SP[]>([])
   const [tr, setTr] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -50,7 +50,7 @@ export function ItemEdit() {
     const it = data.items.find((x) => x.id === id)
     if (!it) return
     setF({ name_th: it.name_th, name_en: it.name_en ?? '', name_my: it.name_my ?? '', category: it.category, count_unit: it.count_unit,
-      safety_stock: String(it.safety_stock), default_supplier_id: it.default_supplier_id ?? '', active: it.active })
+      safety_stock: String(it.safety_stock), default_supplier_id: it.default_supplier_id ?? '', active: it.active, location: it.location ?? '' })
     setSps(data.products.filter((p) => p.item_id === id).map((p) => ({ id: p.id, supplier_id: p.supplier_id, product_name: p.product_name,
       url: p.url ?? '', pack_qty: String(p.pack_qty), order_weekdays: p.order_weekdays ?? [] })))
   }, [data, id, isNew])
@@ -75,7 +75,7 @@ export function ItemEdit() {
     setBusy(true)
     const g = await fillTr(false)
     const row = { name_th: g.name_th.trim(), name_en: g.name_en.trim() || null, name_my: g.name_my.trim() || null, category: f.category,
-      count_unit: f.count_unit.trim(), safety_stock: Number(f.safety_stock) || 0, default_supplier_id: f.default_supplier_id || null, active: f.active }
+      count_unit: f.count_unit.trim(), safety_stock: Number(f.safety_stock) || 0, default_supplier_id: f.default_supplier_id || null, active: f.active, location: f.location.trim() || null }
     let itemId = id as string
     if (isNew) {
       const { data: ins, error } = await sb.from('items').insert(row).select('id').single()
@@ -113,6 +113,10 @@ export function ItemEdit() {
           <span className="text-[11px] text-muted">{tr ? t('tr.working') : t('tr.hint')}</span>
           <Button small disabled={tr || !f.name_th.trim()} onClick={() => fillTr(true)}>{t('tr.again')}</Button>
         </div>
+        <Field label={t('items.location')} hint={t('items.location_hint')}>
+          <input className={inputCls} list="item-locations" value={f.location} onChange={(e) => setF({ ...f, location: e.target.value })} />
+          <datalist id="item-locations">{[...new Set(data.items.map((x) => x.location).filter(Boolean))].map((l) => <option key={l} value={l!} />)}</datalist>
+        </Field>
         <div className="grid grid-cols-2 gap-2.5">
           <Field label={t('stock.category')}>
             <select className={inputCls} value={f.category} onChange={(e) => setF({ ...f, category: e.target.value as Item['category'] })}>

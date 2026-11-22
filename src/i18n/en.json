@@ -154,7 +154,8 @@
     "below": "Below minimum {{qty}} {{unit}}",
     "save_count": "Save count ({{count}})",
     "save_receive": "Save delivery ({{count}})",
-    "saved": "Saved {{count}} item(s)"
+    "saved": "Saved {{count}} item(s)",
+    "no_location": "No storage spot yet"
   },
   "waste": {
     "title": "Waste / loss",
@@ -223,7 +224,9 @@
     "pack": "1 pack = how many {{unit}}",
     "order_days": "Order days",
     "add_supplier": "+ Add supplier",
-    "used_in": "Used in"
+    "used_in": "Used in",
+    "location": "Storage spot",
+    "location_hint": "e.g. Kitchen_Fridge — the count page groups items by this"
   },
   "days": {
     "d0": "Sun",

@@ -82,7 +82,7 @@ export default function App() {
   if (!isConfigured) return <NotConfigured />
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={(import.meta.env.BASE_URL ?? '/').replace(/\/$/, '')}>
         <Routed />
       </BrowserRouter>
     </AuthProvider>

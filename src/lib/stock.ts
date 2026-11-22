@@ -6,6 +6,7 @@ export interface Item {
   id: string; name_th: string; name_en: string | null; name_my: string | null
   category: 'food' | 'can_beer' | 'supply'; count_unit: string; safety_stock: number
   default_supplier_id: string | null; active: boolean
+  location: string | null; sort_order: number
 }
 export interface SupplierProduct {
   id: string; item_id: string; supplier_id: string; product_name: string; url: string | null
