@@ -188,6 +188,8 @@ export default function Kegs() {
   const [tapFor, setTapFor] = useState<string | null>(null)
   const [tapNo, setTapNo] = useState('')
   const [tapDate, setTapDate] = useState(ymd())
+  const [undoFor, setUndoFor] = useState<string | null>(null)
+  const [undoTap, setUndoTap] = useState('')
   const [showAdd, setShowAdd] = useState(false)
   const [nk, setNk] = useState({ beer_name: '', brand: '', keg_type: 'pet' as 'pet' | 'steel', size_l: '20', glass_ml: '250', cost: '', received: ymd(), glasses: '' })
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
@@ -203,6 +205,18 @@ export default function Kegs() {
   const onTap = state.kegs.filter((k) => k.status === 'on_tap').sort((a, b) => (a.tap_no ?? 99) - (b.tap_no ?? 99))
   const inStock = state.kegs.filter((k) => k.status === 'stock')
   const empty = state.kegs.filter((k) => k.status === 'empty')
+  // กดหมดผิด: ดึงกลับได้ภายใน 3 วัน (ยังไม่ถูกเคลียร์)
+  const undoable = empty.filter((k) => k.emptied_at && Date.now() - new Date(k.emptied_at).getTime() < 3 * 86400e3)
+
+  const undoEmpty = async (k: Keg) => {
+    setBusy(true)
+    const { data, error } = await sb.from('kegs').update({ status: 'on_tap', emptied_at: null, return_status: null, tap_no: Number(undoTap) || null })
+      .eq('id', k.id).select('id')
+    setBusy(false)
+    setUndoFor(null)
+    setMsg(error ? { ok: false, text: t('common.save_failed') } : !data?.length ? { ok: false, text: t('kegs.undo_denied') } : { ok: true, text: t('kegs.undo_done', { name: k.beer_name }) })
+    load()
+  }
   const recent = state.readings.filter((r) => onTap.some((k) => k.id === r.keg_id)).slice(0, 10)
 
   const tap = async (k: Keg) => {
@@ -313,6 +327,28 @@ export default function Kegs() {
         <Row><span className="text-[15px] font-semibold">{t('kegs.empty_title')}</span><Pill tone={empty.length ? 'warn' : 'mute'}>{empty.length}</Pill></Row>
         <Row><span>{t('kegs.pet_wait')}</span><span>{empty.filter((k) => k.keg_type === 'pet').length}</span></Row>
         <Row><span>{t('kegs.steel_wait')}</span><span>{empty.filter((k) => k.keg_type === 'steel').length}</span></Row>
+        {undoable.length > 0 && (
+          <div className="flex flex-col gap-2 border-t border-line pt-2.5">
+            <span className="text-xs text-muted">{t('kegs.undo_hint')}</span>
+            {undoable.map((k) => (
+              <div key={k.id} className="flex flex-col gap-2">
+                <Row>
+                  <span className="flex min-w-0 flex-col"><span className="font-semibold">{k.beer_name}</span><span className="text-xs text-muted">{t('kegs.emptied_at', { when: fmtDateTime(k.emptied_at) })}</span></span>
+                  {undoFor !== k.id && <Button small onClick={() => { setUndoFor(k.id); setUndoTap('') }}>{t('kegs.undo_btn')}</Button>}
+                </Row>
+                {undoFor === k.id && (
+                  <div className="flex flex-col gap-2 rounded-2xl bg-amberbg p-3">
+                    <Field label={t('kegs.tap_no')}><input className={inputCls} inputMode="numeric" value={undoTap} onChange={(e) => setUndoTap(e.target.value)} /></Field>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button onClick={() => setUndoFor(null)}>{t('common.cancel')}</Button>
+                      <Button variant="primary" disabled={busy} onClick={() => undoEmpty(k)}>{t('kegs.undo_confirm')}</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
         {profile?.role === 'owner' ? <Link to="/empty-kegs" className="flex min-h-11 items-center text-sm font-semibold underline">{t('kegs.manage_empty')}</Link>
           : <span className="text-xs text-muted">{t('kegs.owner_clears')}</span>}
       </Card>

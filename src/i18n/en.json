@@ -312,7 +312,13 @@
     "tap_date": "Tapped on",
     "received_date": "Received on",
     "glasses_per_keg": "Glasses per keg",
-    "edit_keg": "Edit tap date / glasses per keg"
+    "edit_keg": "Edit tap date / glasses per keg",
+    "undo_hint": "Pressed “Keg empty” by mistake? Put it back on tap within 3 days",
+    "emptied_at": "Marked empty {{when}}",
+    "undo_btn": "Not empty · undo",
+    "undo_confirm": "Put back on tap",
+    "undo_done": "{{name}} is back on tap",
+    "undo_denied": "Can’t undo yet — ask an owner"
   },
   "empty": {
     "title": "Empty kegs",
