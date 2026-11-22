@@ -301,14 +301,18 @@
     "steel_wait": "Steel · awaiting brand pickup",
     "manage_empty": "Manage empty kegs",
     "owner_clears": "The owner clears these",
-    "read_date": "Reading date",
+    "read_date": "Counter reading date",
     "read_date_hint": "You can log a past day if you forgot",
     "today": "Today",
     "history": "Logged readings",
     "edit_aria": "Edit reading {{when}}",
     "editing": "Editing · Tap {{tap}} {{name}}",
     "save_edit": "Save changes",
-    "edit_denied": "You can’t edit this one yet — ask an owner"
+    "edit_denied": "You can’t edit this one yet — ask an owner",
+    "tap_date": "Tapped on",
+    "received_date": "Received on",
+    "glasses_per_keg": "Glasses per keg",
+    "edit_keg": "Edit tap date / glasses per keg"
   },
   "empty": {
     "title": "Empty kegs",

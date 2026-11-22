@@ -17,7 +17,7 @@
 ## สถานะการตั้งค่า (22 พ.ย. 2569)
 - GitHub: `JaBoLee/Taptale-app` (**Public**) · เว็บหลัก GitHub Pages → https://jabolee.github.io/Taptale-app/ (workflow `.github/workflows/pages.yml`, base path `/Taptale-app/`, secret `VITE_SUPABASE_ANON_KEY`, 404.html = SPA fallback)
 - Netlify (https://taptale.netlify.app) ยัง auto-deploy จาก main อยู่ — เลิกใช้ได้เมื่อบอสยืนยัน
-- Supabase project ref `ddmltpvqvuvxqcflrrvj` (Singapore) · รัน migration 0001–0005 แล้ว (ผ่าน SQL editor) · **0006 ยังไม่ได้รัน** (keg edit policy, payment_fixes, last_cash_close เฉพาะเจ้าของ) — รันเมื่อบอสเปิดคอม
+- Supabase project ref `ddmltpvqvuvxqcflrrvj` (Singapore) · รัน migration 0001–0005 แล้ว (ผ่าน SQL editor) · **0006 + 0007 ยังไม่ได้รัน** (0006: keg edit policy, payment_fixes, last_cash_close เฉพาะเจ้าของ; 0007: kegs.expected_glasses) — รันเมื่อบอสเปิดคอม
 - Edge Functions deploy แล้ว (ผ่าน dashboard editor): `manage-users`, `translate`, `google-sync`
 - สมัครเองได้ (Allow sign up เปิด, Confirm email ปิด) แต่บัญชีใหม่รออนุมัติ (active=false) จนเจ้าของอนุมัติใน /users
 - พิกัดร้าน 13.7055114, 100.5063924 รัศมี 100 ม. · photo bucket `photos` (private)
@@ -65,6 +65,7 @@ React + Vite + TypeScript + Tailwind, PWA บน Netlify, Supabase (Postgres + A
 3. เปิดกะ: ไม่เติมเงินจากกะก่อน; ยอดไม่ตรงแสดงเฉพาะหน้าเจ้าของ
 4. ธีมใหม่ทั้งแอป (ตามหน้า "ดีไซน์ใหม่ · มีสี" ใน artifact)
 5. ปิดกะ: ช่องทางชำระที่กดผิด (ตาราง payment_fixes) หลายรายการ + ผลต่อเงินสด; เจ้าของเห็นในภาพรวม 14 วัน — ซ่อนอัตโนมัติจนกว่าจะรัน 0006
+6. เบียร์สด: วันที่รับถังเข้าตู้ + วันที่จั้ม (เลือกได้/แก้ได้) · แก้วต่อถัง ค่าเริ่มต้น 3.75 แก้ว/ลิตร (20 ล. ≈ 75 แก้ว) แก้รายถังได้หลังรัน 0007
 - ยังไม่ได้: เพิ่ม payment_fixes ในสำรองข้อมูล google-sync (ต้อง deploy function ใหม่)
 
 ## รอคำตอบจากบอส

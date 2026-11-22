@@ -9,11 +9,17 @@ export interface Keg {
   id: string; beer_name: string; brand: string; keg_type: 'pet' | 'steel'; size_l: number; glass_ml: number; cost: number | null
   status: 'stock' | 'on_tap' | 'empty' | 'cleared'; tap_no: number | null; received_at: string; tapped_at: string | null; emptied_at: string | null
   return_status: 'pending' | 'notified' | 'scheduled' | null; return_date: string | null; cleared_at: string | null
-  cleared_how: 'donated' | 'sold' | 'returned' | null; sale_amount: number | null
+  cleared_how: 'donated' | 'sold' | 'returned' | null; sale_amount: number | null; expected_glasses?: number | null
 }
 export interface Reading { id: string; keg_id: string; counter: number; created_at: string; created_by: string }
 
-export const expectedGlasses = (k: Keg) => Math.floor((Number(k.size_l) * 1000) / (k.glass_ml || 500))
+/** แก้วที่ขายได้ต่อถัง: ใช้ค่าที่ตั้งไว้ของถัง ถ้าไม่มีใช้ 3.75 แก้ว/ลิตร (ถัง 20 ล. ≈ 75 แก้ว ตามที่ร้านขายได้จริง) */
+export const GLASSES_PER_L = 3.75
+export const defaultGlasses = (sizeL: number) => Math.round(Number(sizeL) * GLASSES_PER_L)
+export const expectedGlasses = (k: Keg) => (k.expected_glasses && k.expected_glasses > 0 ? k.expected_glasses : defaultGlasses(k.size_l))
+
+/** วันที่ที่เลือก → timestamp: วันนี้ = ตอนนี้, วันอื่น = เที่ยงวันของวันนั้น (เวลาไทย) */
+const dayTime = (date: string) => (date === ymd() ? new Date().toISOString() : new Date(`${date}T12:00:00+07:00`).toISOString())
 
 export async function loadKegs() {
   const [{ data: kegs }, { data: rd }] = await Promise.all([
@@ -92,6 +98,18 @@ function OnTapCard({ k, reading, date, onDone }: { k: Keg; reading?: Reading; da
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const exp = expectedGlasses(k)
   const sold = reading?.counter ?? 0
+  const [editK, setEditK] = useState(false)
+  const [kd, setKd] = useState({ tapped: ymd(k.tapped_at ? new Date(k.tapped_at) : new Date()), glasses: String(exp) })
+  const saveKeg = async () => {
+    setBusy(true)
+    const sameDay = k.tapped_at && kd.tapped === ymd(new Date(k.tapped_at))
+    const base = { tapped_at: sameDay ? k.tapped_at : new Date(`${kd.tapped}T12:00:00+07:00`).toISOString() }
+    let { data, error } = await sb.from('kegs').update({ ...base, expected_glasses: Number(kd.glasses) || null }).eq('id', k.id).select('id')
+    if (error && /expected_glasses/.test(error.message)) ({ data, error } = await sb.from('kegs').update(base).eq('id', k.id).select('id'))
+    setBusy(false)
+    if (error || !data?.length) { setMsg({ ok: false, text: t('common.save_failed') }); return }
+    setEditK(false); setMsg(null); onDone()
+  }
   const days = k.tapped_at ? Math.max((Date.now() - new Date(k.tapped_at).getTime()) / 86400000, 0.5) : 1
   const perDay = sold / days
   const left = Math.max(exp - sold, 0)
@@ -138,6 +156,20 @@ function OnTapCard({ k, reading, date, onDone }: { k: Keg; reading?: Reading; da
         </span>
       </Row>
       <span className="text-xs text-muted">{reading ? t('kegs.updated', { when: fmtDateTime(reading.created_at) }) : t('kegs.no_reading')} · {t('kegs.per_day', { n: fmtNum(perDay, 1) })}</span>
+      {editK ? (
+        <div className="flex flex-col gap-2 rounded-2xl bg-amberbg p-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Field label={t('kegs.tap_date')}><input type="date" className={inputCls} max={ymd()} value={kd.tapped} onChange={(e) => setKd({ ...kd, tapped: e.target.value || ymd() })} /></Field>
+            <Field label={t('kegs.glasses_per_keg')}><input className={inputCls} inputMode="numeric" value={kd.glasses} onChange={(e) => setKd({ ...kd, glasses: e.target.value })} /></Field>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Button onClick={() => setEditK(false)}>{t('common.cancel')}</Button>
+            <Button variant="primary" disabled={busy} onClick={saveKeg}>{t('kegs.save_edit')}</Button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" onClick={() => setEditK(true)} className="min-h-11 self-start text-sm font-semibold text-amberink underline">{t('kegs.edit_keg')}</button>
+      )}
       <Msg msg={msg} />
       <div className="grid grid-cols-2 gap-2">
         <Button disabled={busy} onClick={empty}>{t('kegs.empty_btn')}</Button>
@@ -155,8 +187,9 @@ export default function Kegs() {
   const [glasses, setGlasses] = useState<number[]>([500])
   const [tapFor, setTapFor] = useState<string | null>(null)
   const [tapNo, setTapNo] = useState('')
+  const [tapDate, setTapDate] = useState(ymd())
   const [showAdd, setShowAdd] = useState(false)
-  const [nk, setNk] = useState({ beer_name: '', brand: '', keg_type: 'pet' as 'pet' | 'steel', size_l: '20', glass_ml: '500', cost: '' })
+  const [nk, setNk] = useState({ beer_name: '', brand: '', keg_type: 'pet' as 'pet' | 'steel', size_l: '20', glass_ml: '250', cost: '', received: ymd(), glasses: '' })
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -174,19 +207,24 @@ export default function Kegs() {
 
   const tap = async (k: Keg) => {
     setBusy(true)
-    const { error } = await sb.from('kegs').update({ status: 'on_tap', tapped_at: new Date().toISOString(), tap_no: Number(tapNo) || null }).eq('id', k.id)
-    if (!error) await sb.from('keg_readings').insert({ keg_id: k.id, counter: 0 })
+    const at = dayTime(tapDate)
+    const { error } = await sb.from('kegs').update({ status: 'on_tap', tapped_at: at, tap_no: Number(tapNo) || null }).eq('id', k.id)
+    if (!error) await sb.from('keg_readings').insert({ keg_id: k.id, counter: 0, created_at: at })
     setMsg(error ? { ok: false, text: t('common.save_failed') } : { ok: true, text: t('kegs.tapped_ok') })
-    setTapFor(null); setTapNo(''); await load(); setBusy(false)
+    setTapFor(null); setTapNo(''); setTapDate(ymd()); await load(); setBusy(false)
   }
 
   const addKeg = async () => {
     if (!nk.beer_name.trim() || !nk.brand.trim() || !Number(nk.size_l)) { setMsg({ ok: false, text: t('kegs.need') }); return }
     setBusy(true)
-    const { error } = await sb.from('kegs').insert({ beer_name: nk.beer_name.trim(), brand: nk.brand.trim(), keg_type: nk.keg_type,
-      size_l: Number(nk.size_l), glass_ml: Number(nk.glass_ml) || 500, cost: nk.cost ? Number(nk.cost) : null, status: 'stock' })
+    const row = { beer_name: nk.beer_name.trim(), brand: nk.brand.trim(), keg_type: nk.keg_type, size_l: Number(nk.size_l),
+      glass_ml: Number(nk.glass_ml) || 250, cost: nk.cost ? Number(nk.cost) : null, status: 'stock', received_at: dayTime(nk.received) }
+    const glasses = Number(nk.glasses) || defaultGlasses(Number(nk.size_l))
+    let { error } = await sb.from('kegs').insert({ ...row, expected_glasses: glasses })
+    // ก่อนรัน migration 0007 ยังไม่มีคอลัมน์ expected_glasses → บันทึกโดยไม่มีค่านี้ (ระบบใช้ 3.75 แก้ว/ลิตรแทน)
+    if (error && /expected_glasses/.test(error.message)) ({ error } = await sb.from('kegs').insert(row))
     setMsg(error ? { ok: false, text: t('common.save_failed') } : { ok: true, text: t('kegs.added') })
-    if (!error) { setShowAdd(false); setNk({ ...nk, beer_name: '', cost: '' }); await load() }
+    if (!error) { setShowAdd(false); setNk({ ...nk, beer_name: '', cost: '', received: ymd(), glasses: '' }); await load() }
     setBusy(false)
   }
 
@@ -223,8 +261,12 @@ export default function Kegs() {
             {tapFor === k.id ? (
               <div className="flex flex-col gap-2 rounded-xl bg-warnbg p-3">
                 <span className="text-sm font-semibold text-warn">{t('kegs.reset_reminder')}</span>
-                <div className="grid grid-cols-[1fr_auto] items-end gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <Field label={t('kegs.tap_no')}><input className={inputCls} inputMode="numeric" value={tapNo} onChange={(e) => setTapNo(e.target.value)} /></Field>
+                  <Field label={t('kegs.tap_date')}><input type="date" className={inputCls} max={ymd()} value={tapDate} onChange={(e) => setTapDate(e.target.value || ymd())} /></Field>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button onClick={() => setTapFor(null)}>{t('common.cancel')}</Button>
                   <Button variant="primary" disabled={busy} onClick={() => tap(k)}>{t('kegs.confirm_tap')}</Button>
                 </div>
               </div>
@@ -251,6 +293,10 @@ export default function Kegs() {
                   {glasses.map((g) => <option key={g} value={g}>{g} ml</option>)}
                 </select>
               </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              <Field label={t('kegs.received_date')}><input type="date" className={inputCls} max={ymd()} value={nk.received} onChange={(e) => setNk({ ...nk, received: e.target.value || ymd() })} /></Field>
+              <Field label={t('kegs.glasses_per_keg')}><input className={inputCls} inputMode="numeric" placeholder={String(defaultGlasses(Number(nk.size_l) || 0))} value={nk.glasses} onChange={(e) => setNk({ ...nk, glasses: e.target.value })} /></Field>
             </div>
             {profile?.role === 'owner' && <Field label={t('kegs.cost')}><input className={inputCls} inputMode="decimal" value={nk.cost} onChange={(e) => setNk({ ...nk, cost: e.target.value })} /></Field>}
             <div className="grid grid-cols-2 gap-2">
