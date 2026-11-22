@@ -392,7 +392,12 @@
     "attach_receipt": "Attach receipt (optional)",
     "need_amount": "Enter an amount",
     "move_saved": "Saved",
-    "save_move": "Save"
+    "save_move": "Add this item",
+    "moves_today": "{{n}} today",
+    "moves_total": "Net today",
+    "add_first": "Add an item",
+    "add_another": "Add another item",
+    "need_note": "“Other” needs a note"
   },
   "receipt": {
     "title": "Receipt photo",
