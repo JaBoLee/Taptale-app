@@ -7,6 +7,7 @@ import { Card, Page, Pill, Row } from '../components/ui'
 interface Close { id: string; profile_id: string; work_date: string; shift_code: string | null; bill_count: number | null; bill_total: number | null; cash_open: number; cash_close: number; closed_at: string }
 interface Move { direction: 'in' | 'out'; amount: number; reason: string; created_at: string }
 interface Issue { cur: Close; prev: Close; diff: number; moves: Move[] }
+interface PayFix { id: string; work_date: string; shift_code: string | null; bill_no: string | null; amount: number; recorded_as: string; actual: string; note: string | null; created_by: string; created_at: string }
 
 export default function OwnerHome() {
   const { t } = useTranslation()
@@ -14,11 +15,12 @@ export default function OwnerHome() {
   const [inside, setInside] = useState<{ name: string; at: string }[]>([])
   const [counts, setCounts] = useState({ receipts: 0, leaves: 0, pending: 0, closes: 0, sales: 0 })
   const [names, setNames] = useState<Record<string, string>>({})
+  const [fixes, setFixes] = useState<PayFix[]>([])
 
   useEffect(() => {
     (async () => {
       const since = addDays(ymd(), -14)
-      const [{ data: closes }, { data: moves }, s, members, { data: att }, r, l, p] = await Promise.all([
+      const [{ data: closes }, { data: moves }, s, members, { data: att }, r, l, p, fx] = await Promise.all([
         sb.from('shift_closes').select('*').gte('work_date', since).order('closed_at'),
         sb.from('cash_movements').select('direction, amount, reason, created_at').gte('created_at', since + 'T00:00:00+07:00'),
         loadSettings(), loadMembers(),
@@ -26,7 +28,9 @@ export default function OwnerHome() {
         sb.from('receipts').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         sb.from('leave_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         sb.from('profiles').select('id', { count: 'exact', head: true }).eq('active', false).is('approved_at', null),
+        sb.from('payment_fixes').select('*').gte('work_date', since).order('created_at', { ascending: false }).limit(30),
       ])
+      if (!fx.error) setFixes(((fx.data as PayFix[]) ?? []).map((x) => ({ ...x, amount: Number(x.amount) })))
       const nm: Record<string, string> = {}
       for (const m of members) nm[m.id] = m.display_name
       setNames(nm)
@@ -56,6 +60,18 @@ export default function OwnerHome() {
 
   return (
     <Page title={t('owner.title')}>
+      <div className="grid grid-cols-2 gap-2.5">
+        <div className="flex flex-col gap-1 rounded-[18px] bg-ink p-3.5 text-white">
+          <span className="text-xs text-herosub">{t('owner.kpi_sales')}</span>
+          <span className="text-[22px] font-bold text-amber">{fmtMoney(counts.sales)}</span>
+          <span className="text-xs text-herosub">{t('owner.today_closes', { n: counts.closes })}</span>
+        </div>
+        <div className="flex flex-col gap-1 rounded-[18px] bg-tealbg p-3.5 text-tealink">
+          <span className="text-xs">{t('owner.inside')}</span>
+          <span className="text-[22px] font-bold">{inside.length}</span>
+          <span className="truncate text-xs">{inside.map((x) => x.name).join(', ') || t('owner.nobody')}</span>
+        </div>
+      </div>
       {(counts.pending > 0 || counts.leaves > 0 || counts.receipts > 0) && (
         <Card tone="warn">
           <span className="text-[15px] font-semibold">{t('owner.todo')}</span>
@@ -67,9 +83,9 @@ export default function OwnerHome() {
 
       {issues.length > 0 && (
         <Card tone="bad">
-          <span className="text-[15px] font-semibold text-bad">{t('owner.cash_issues', { n: issues.length })}</span>
+          <Row><span className="text-[15px] font-bold text-bad">{t('owner.cash_issues', { n: issues.length })}</span><span className="rounded-full bg-bad px-2.5 py-0.5 text-xs font-bold text-white">{t('owner.only_owner')}</span></Row>
           {issues.slice(0, 5).map((x) => (
-            <div key={x.cur.id} className="flex flex-col gap-0.5 border-t border-line pt-2 text-sm">
+            <div key={x.cur.id} className="flex flex-col gap-0.5 border-t border-badline pt-2 text-sm">
               <Row><span>{t('owner.cash_line', { prev: names[x.prev.profile_id] ?? '–', cur: names[x.cur.profile_id] ?? '–' })}</span><b className="text-bad">{x.diff > 0 ? '+' : ''}{fmtMoney(x.diff)}</b></Row>
               <span className="text-xs text-muted">{t('owner.cash_detail', { close: fmtMoney(x.prev.cash_close), open: fmtMoney(x.cur.cash_open), when: fmtDateTime(x.cur.closed_at) })}</span>
               {x.moves.length > 0 && <span className="text-xs text-muted">{t('owner.cash_moves', { list: x.moves.map((m) => `${m.direction === 'out' ? '−' : '+'}${fmtMoney(m.amount)}`).join(', ') })}</span>}
@@ -78,15 +94,29 @@ export default function OwnerHome() {
         </Card>
       )}
 
-      <Card>
-        <Row><span className="text-[15px] font-semibold">{t('owner.inside')}</span><Pill>{inside.length}</Pill></Row>
-        {inside.length === 0 && <span className="text-sm text-muted">{t('owner.nobody')}</span>}
-        {inside.map((x, i) => <Row key={i}><span>{x.name}</span><span className="text-ok">{t('owner.in_since', { time: fmtTime(x.at) })}</span></Row>)}
-        <Row className="border-t border-line pt-2"><span className="text-muted">{t('owner.today_closes', { n: counts.closes })}</span><b>{fmtMoney(counts.sales)}</b></Row>
-      </Card>
+      {fixes.length > 0 && (
+        <Card tone="warn">
+          <Row><span className="text-[15px] font-bold text-amberink">{t('fix.owner_title')}</span><Pill tone="warn">{fixes.length}</Pill></Row>
+          {fixes.map((x) => (
+            <div key={x.id} className="flex flex-col gap-1 border-t border-warnline pt-2 text-sm">
+              <Row>
+                <span className="font-semibold">{x.bill_no ? `#${x.bill_no} · ` : ''}{fmtMoney(x.amount)}</span>
+                <span className="flex items-center gap-1 text-xs"><Pill tone="bad">{t(`fix.p_${x.recorded_as}`)}</Pill>→<Pill tone="ok">{t(`fix.p_${x.actual}`)}</Pill></span>
+              </Row>
+              <span className="text-xs text-muted">{x.shift_code ? `${t('clock.shift')} ${x.shift_code} · ` : ''}{t('fix.by', { name: names[x.created_by] ?? '–', when: fmtDateTime(x.created_at) })}{x.note ? ` · ${x.note}` : ''}</span>
+            </div>
+          ))}
+        </Card>
+      )}
+
+      {inside.length > 0 && (
+        <Card>
+          {inside.map((x, i) => <Row key={i}><span>{x.name}</span><Pill tone="ok">{t('owner.in_since', { time: fmtTime(x.at) })}</Pill></Row>)}
+        </Card>
+      )}
 
       <div className="grid grid-cols-2 gap-2">
-        {links.map((l) => <Link key={l.to} to={l.to} className="flex min-h-14 items-center justify-center rounded-[14px] border border-line bg-white px-3 text-center text-sm font-semibold">{l.label}</Link>)}
+        {links.map((l) => <Link key={l.to} to={l.to} className="flex min-h-14 items-center justify-center rounded-[18px] bg-white shadow-[0_1px_0_var(--color-line)] px-3 text-center text-sm font-semibold">{l.label}</Link>)}
       </div>
       <p className="text-xs text-muted">{t('owner.integrations')}</p>
     </Page>

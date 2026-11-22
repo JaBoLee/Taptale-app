@@ -43,7 +43,7 @@ export default function InstallApp() {
   const dismiss = () => { try { localStorage.setItem('install_dismissed', '1') } catch { /* ignore */ } setHidden(true) }
 
   return (
-    <section className="flex flex-col gap-2 rounded-[14px] border border-line bg-white p-4">
+    <section className="flex flex-col gap-2 rounded-[18px] bg-amberbg p-4">
       <div className="flex items-center gap-3">
         <img src="/icon-192.png" alt="" className="h-11 w-11 rounded-xl" />
         <div className="flex flex-1 flex-col">
@@ -53,7 +53,7 @@ export default function InstallApp() {
       </div>
       {showIos && <p className="rounded-lg bg-paper p-3 text-sm">{t('install.ios')}</p>}
       <div className="grid grid-cols-2 gap-2">
-        <button type="button" onClick={dismiss} className="h-11 rounded-xl border border-[#D9D6D0] bg-white text-sm font-semibold">{t('install.later')}</button>
+        <button type="button" onClick={dismiss} className="h-11 rounded-xl border border-edge bg-white text-sm font-semibold">{t('install.later')}</button>
         <button type="button" onClick={install} className="h-11 rounded-xl bg-ink text-sm font-semibold text-white">{t('install.btn')}</button>
       </div>
     </section>

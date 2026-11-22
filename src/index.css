@@ -2,16 +2,34 @@
 
 @theme {
   --font-sans: "IBM Plex Sans Thai", "Noto Sans Myanmar", system-ui, sans-serif;
-  --color-ink: #1C1B19;
-  --color-muted: #6B6862;
-  --color-line: #E6E4DF;
-  --color-paper: #F7F7F5;
-  --color-ok: #15803D;
-  --color-okbg: #EAF5EE;
-  --color-bad: #B91C1C;
-  --color-badbg: #FBEAEA;
-  --color-warn: #9A4A06;
-  --color-warnbg: #FBF1E4;
+  /* พื้นและตัวอักษร — โทนครีมอุ่น */
+  --color-ink: #1E1B16;
+  --color-ink2: #4A443B;
+  --color-muted: #6B645A;
+  --color-line: #E7E1D7;
+  --color-edge: #E1D9CC;
+  --color-paper: #F6F3EE;
+  --color-field: #FBFAF7;
+  --color-sand: #EAE4DA;
+  --color-herosub: #CFC6B8;
+  /* สีแบรนด์: อำพัน (เบียร์) + เขียวฮอป */
+  --color-amber: #F2A93B;
+  --color-amberbg: #FDF1DC;
+  --color-amberink: #8A4B05;
+  --color-teal: #0F766E;
+  --color-tealbg: #E3F2EF;
+  --color-tealink: #0B5F58;
+  /* สถานะ */
+  --color-ok: #14653E;
+  --color-okbg: #E7F5EC;
+  --color-okline: #B9DCC6;
+  --color-bad: #A41D14;
+  --color-badbg: #FDECEA;
+  --color-badline: #E8A8A2;
+  --color-danger: #B42318;
+  --color-warn: #8A4B05;
+  --color-warnbg: #FDF1DC;
+  --color-warnline: #F1D9B8;
 }
 
 html, body, #root { height: 100%; }

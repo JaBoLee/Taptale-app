@@ -15,8 +15,8 @@ interface Row {
   approved_at: string | null
 }
 
-const input = 'h-11 w-full rounded-[10px] border border-[#D9D6D0] bg-white px-3 text-[15px] text-ink'
-const btn = 'h-11 rounded-[10px] border border-[#D9D6D0] bg-white px-4 text-sm font-semibold'
+const input = 'h-11 w-full rounded-xl border-[1.5px] border-edge bg-field px-3 text-[15px] text-ink'
+const btn = 'h-11 rounded-xl border-[1.5px] border-edge bg-field px-4 text-sm font-semibold'
 const btnP = 'h-11 rounded-[10px] bg-ink px-4 text-sm font-semibold text-white disabled:opacity-60'
 
 async function call(body: Record<string, unknown>) {
@@ -127,7 +127,7 @@ export default function Users() {
             const f = approveForm[r.id] ?? { role: 'staff' as Role, wage: '' }
             const setF = (v: Partial<typeof f>) => setApproveForm({ ...approveForm, [r.id]: { ...f, ...v } })
             return (
-              <div key={r.id} className="flex flex-col gap-3 rounded-[14px] border border-[#E3C9A4] bg-white p-3.5">
+              <div key={r.id} className="flex flex-col gap-3 rounded-[14px] border border-warnline bg-white p-3.5">
                 <div className="flex flex-col">
                   <span className="text-[15px] font-semibold">{r.display_name}</span>
                   <span className="text-xs text-muted">{r.username}</span>
@@ -152,7 +152,7 @@ export default function Users() {
 
       <section className="flex flex-col gap-2">
         {memberRows.map((r) => (
-          <div key={r.id} className={`flex flex-col gap-3 rounded-[14px] border border-line bg-white p-3.5 ${r.active ? '' : 'opacity-60'}`}>
+          <div key={r.id} className={`flex flex-col gap-3 rounded-[18px] bg-white shadow-[0_1px_0_var(--color-line)] p-3.5 ${r.active ? '' : 'opacity-60'}`}>
             <div className="flex items-center justify-between gap-3">
               <div className="flex flex-col">
                 <span className="text-[15px] font-semibold">{r.display_name}</span>
@@ -187,7 +187,7 @@ export default function Users() {
         ))}
       </section>
 
-      <form onSubmit={create} className="flex flex-col gap-3 rounded-[14px] border border-line bg-white p-4">
+      <form onSubmit={create} className="flex flex-col gap-3 rounded-[18px] bg-white shadow-[0_1px_0_var(--color-line)] p-4">
         <h2 className="text-[15px] font-semibold">{t('users.add')}</h2>
         <div className="grid grid-cols-2 gap-2.5">
           <label className="flex flex-col gap-1 text-xs text-muted">{t('login.username')}

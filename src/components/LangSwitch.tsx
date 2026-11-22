@@ -11,7 +11,7 @@ export default function LangSwitch() {
   const { t, i18n } = useTranslation()
   const { setLang } = useAuth()
   return (
-    <div role="group" aria-label={t('lang.label')} className="flex gap-0.5 rounded-[10px] bg-[#EFEEEA] p-[3px]">
+    <div role="group" aria-label={t('lang.label')} className="flex gap-0.5 rounded-[10px] bg-sand p-[3px]">
       {LANGS.map((l) => {
         const on = i18n.language === l.code
         return (
@@ -20,7 +20,7 @@ export default function LangSwitch() {
             type="button"
             onClick={() => setLang(l.code)}
             aria-pressed={on}
-            className={`h-9 min-w-10 rounded-lg px-2 text-xs font-semibold ${on ? 'bg-white text-ink shadow-sm' : 'text-muted'}`}
+            className={`h-9 min-w-11 rounded-lg px-2 text-xs font-semibold ${on ? 'bg-amber text-ink' : 'text-muted'}`}
           >
             {l.label}
           </button>

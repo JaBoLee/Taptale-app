@@ -212,7 +212,7 @@ export function Team() {
                     return (
                       <td key={d}>
                         <select aria-label={`${m.display_name} ${d}`} value={cellValue(a)} onChange={(e) => setCell(m.id, d, e.target.value)}
-                          className={`h-10 w-full rounded-lg border text-center text-[13px] font-semibold ${a?.status === 'leave' ? 'border-[#F1D9B8] bg-warnbg text-warn' : a?.status === 'off' || !a ? 'border-line bg-paper text-muted' : 'border-line bg-white'}`}>
+                          className={`h-10 w-full rounded-lg border text-center text-[13px] font-semibold ${a?.status === 'leave' ? 'border-warnline bg-warnbg text-warn' : a?.status === 'off' || !a ? 'border-line bg-paper text-muted' : 'border-line bg-white'}`}>
                           <option value="">–</option>
                           {types.map((s) => <option key={s.code} value={s.code}>{s.code}</option>)}
                           <option value="off">{t('sched.off_s')}</option>

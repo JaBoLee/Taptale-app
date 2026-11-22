@@ -155,7 +155,9 @@
     "save_count": "Save count ({{count}})",
     "save_receive": "Save delivery ({{count}})",
     "saved": "Saved {{count}} item(s)",
-    "no_location": "No storage spot yet"
+    "no_location": "No storage spot yet",
+    "progress": "Filled {{done}} of {{total}}",
+    "low_count": "Below minimum: {{count}}"
   },
   "waste": {
     "title": "Waste / loss",
@@ -224,9 +226,17 @@
     "pack": "1 pack = how many {{unit}}",
     "order_days": "Order days",
     "add_supplier": "+ Add supplier",
-    "used_in": "Used in",
+    "used_in": "Used in {{n}} recipes",
     "location": "Storage spot",
-    "location_hint": "e.g. Kitchen_Fridge — the count page groups items by this"
+    "location_hint": "e.g. Kitchen_Fridge — the count page groups items by this",
+    "deleted": "Deleted “{{name}}”",
+    "count": "{{n}} active items",
+    "del_q": "Delete “{{name}}”?",
+    "del_body": "It will be removed from recipes and the count page. Past counts are kept, and you can bring it back from “Off / deleted”.",
+    "del_yes": "Delete item",
+    "del_aria": "Delete {{name}}",
+    "show_off": "Show off / deleted ({{n}})",
+    "hide_off": "Hide off / deleted"
   },
   "days": {
     "d0": "Sun",
@@ -290,7 +300,15 @@
     "pet_wait": "PET · to donate/sell",
     "steel_wait": "Steel · awaiting brand pickup",
     "manage_empty": "Manage empty kegs",
-    "owner_clears": "The owner clears these"
+    "owner_clears": "The owner clears these",
+    "read_date": "Reading date",
+    "read_date_hint": "You can log a past day if you forgot",
+    "today": "Today",
+    "history": "Logged readings",
+    "edit_aria": "Edit reading {{when}}",
+    "editing": "Editing · Tap {{tap}} {{name}}",
+    "save_edit": "Save changes",
+    "edit_denied": "You can’t edit this one yet — ask an owner"
   },
   "empty": {
     "title": "Empty kegs",
@@ -358,7 +376,7 @@
     "bills": "Number of bills",
     "bill_total": "Bill total (THB)",
     "cash_open": "Cash at start",
-    "cash_open_hint": "Pre-filled from the last close — change it if your count differs",
+    "cash_open_hint": "Count the drawer and type it in yourself — the owner sees the check against the last shift",
     "cash_close": "Cash at end",
     "need_cash": "Enter cash at start and end",
     "saved": "Shift closed — thank you",
@@ -494,7 +512,9 @@
     "l_items": "Items",
     "l_menus": "Menus & recipes",
     "l_settings": "Settings",
-    "integrations": "Still to connect: Google Drive/Sheet (07:00 backup, to-order tab), LINE OA (alerts), AI receipt/slip reading"
+    "integrations": "Still to connect: Google Drive/Sheet (07:00 backup, to-order tab), LINE OA (alerts), AI receipt/slip reading",
+    "kpi_sales": "Bills today",
+    "only_owner": "Owners only"
   },
   "tr": {
     "hint": "Type Thai — English/Burmese are filled in automatically (editable)",
@@ -518,5 +538,27 @@
     "done": "Backup complete",
     "failed": "Backup failed — try again later",
     "not_connected": "Google is not connected yet"
+  },
+  "fix": {
+    "title": "Wrong payment method",
+    "count": "{{n}} items",
+    "hint": "Customer paid one way but the POS entry used another · skip if none",
+    "bill_no": "Bill no. (optional)",
+    "recorded": "Entered in POS as",
+    "actual": "Customer actually paid by",
+    "add": "Add this item",
+    "remove": "Remove this item",
+    "need": "Enter the amount and pick both methods",
+    "same": "The two methods must be different",
+    "was": "Entered {{p}}",
+    "real": "Actually {{p}}",
+    "p_cash": "Cash",
+    "p_qr": "QR",
+    "p_card": "Card",
+    "effect": "Effect on drawer cash",
+    "effect_hint": "Real cash should differ from POS cash by this much · owners see every item",
+    "save_failed": "Shift closed, but the payment-method fixes did not save — tell an owner the bill numbers",
+    "owner_title": "Wrong payment methods (14 days)",
+    "by": "{{name}} · {{when}}"
   }
 }

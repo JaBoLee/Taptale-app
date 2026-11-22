@@ -48,7 +48,7 @@ export default function Receipt() {
   return (
     <Page title={t('receipt.title')} back="/">
       <Card>
-        <label className="flex h-64 cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-[#2B2A27] text-sm text-white">
+        <label className="flex h-64 cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-ink text-sm text-white">
           {preview ? <img src={preview} alt={t('receipt.preview')} className="h-full w-full object-contain" /> : t('receipt.tap_to_shoot')}
           <input type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => pick(e.target.files?.[0] ?? null)} />
         </label>
@@ -57,7 +57,7 @@ export default function Receipt() {
           <div className="flex flex-wrap gap-2">
             {sources.map((s) => (
               <button key={s} type="button" aria-pressed={from === s} onClick={() => setFrom(s)}
-                className={`h-10 rounded-full border px-4 text-[13px] ${from === s ? 'border-ink bg-ink text-white' : 'border-[#D9D6D0] bg-white text-ink'}`}>{s}</button>
+                className={`h-10 rounded-full border px-4 text-[13px] ${from === s ? 'border-ink bg-ink text-white' : 'border-edge bg-white text-ink'}`}>{s}</button>
             ))}
           </div>
         </div>

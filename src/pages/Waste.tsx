@@ -71,7 +71,7 @@ export default function Waste() {
             <div className="flex flex-wrap gap-2">
               {REASONS.map((r) => (
                 <button key={r} type="button" aria-pressed={reason === r} onClick={() => setReason(r)}
-                  className={`h-10 rounded-full border px-4 text-[13px] ${reason === r ? 'border-ink bg-ink text-white' : 'border-[#D9D6D0] bg-white text-ink'}`}>
+                  className={`h-10 rounded-full border px-4 text-[13px] ${reason === r ? 'border-ink bg-ink text-white' : 'border-edge bg-white text-ink'}`}>
                   {t(`waste.r_${r}`)}
                 </button>
               ))}

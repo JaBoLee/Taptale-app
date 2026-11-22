@@ -72,7 +72,7 @@ export default function EmptyKegs() {
   return (
     <Page title={t('empty.title')} subtitle={t('empty.subtitle')} back="/owner">
       {overLimit && kegs.length > 0 && (
-        <p role="alert" className="rounded-xl border border-[#EFC3C3] bg-badbg px-3.5 py-3 text-sm text-bad">
+        <p role="alert" className="rounded-xl border border-badline bg-badbg px-3.5 py-3 text-sm text-bad">
           {t('empty.alert', { n: kegs.length, max: alert.max_kegs, days: oldest })}
         </p>
       )}
@@ -83,7 +83,7 @@ export default function EmptyKegs() {
         {pet.length === 0 && <span className="text-sm text-muted">{t('common.none')}</span>}
         {pet.map((k) => (
           <label key={k.id} className="flex min-h-11 items-center gap-3 text-sm">
-            <input type="checkbox" className="h-5 w-5 accent-[#1C1B19]" checked={sel.includes(k.id)}
+            <input type="checkbox" className="h-5 w-5 accent-amberink" checked={sel.includes(k.id)}
               onChange={(e) => setSel(e.target.checked ? [...sel, k.id] : sel.filter((x) => x !== k.id))} />
             <span className="flex-1">{k.beer_name} {fmtNum(k.size_l)} L</span>
             <span className="text-xs text-muted">{t('empty.emptied', { d: fmtDate(k.emptied_at) })}</span>
@@ -143,7 +143,7 @@ export default function EmptyKegs() {
           return (
             <div key={k.id} className="flex flex-col gap-1">
               <Row><span>{k.beer_name} · {fmtNum(k.size_l)} L</span><span className="font-semibold">{y}% ({sold}/{exp})</span></Row>
-              <div className="h-1.5 overflow-hidden rounded bg-[#EFEEEA]"><div className={`h-1.5 ${y < 88 ? 'bg-warn' : 'bg-ok'}`} style={{ width: `${Math.min(y, 100)}%` }} /></div>
+              <div className="h-1.5 overflow-hidden rounded bg-sand"><div className={`h-1.5 ${y < 88 ? 'bg-warn' : 'bg-ok'}`} style={{ width: `${Math.min(y, 100)}%` }} /></div>
             </div>
           )
         })}

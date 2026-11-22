@@ -104,7 +104,7 @@ export default function MenuEdit() {
           <input className={inputCls} inputMode="numeric" value={f.min_portions} onChange={(e) => setF({ ...f, min_portions: e.target.value })} />
         </Field>
         <label className="flex min-h-11 items-center gap-2 text-sm">
-          <input type="checkbox" className="h-5 w-5 accent-[#1C1B19]" checked={f.active} onChange={(e) => setF({ ...f, active: e.target.checked })} />
+          <input type="checkbox" className="h-5 w-5 accent-amberink" checked={f.active} onChange={(e) => setF({ ...f, active: e.target.checked })} />
           {t('menuedit.active')}
         </label>
       </Card>

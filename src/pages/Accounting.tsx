@@ -49,7 +49,7 @@ function ReceiptReview({ r, onDone }: { r: Rcpt; onDone: () => void }) {
         </select>
       </Field>
       <label className="flex min-h-11 items-center gap-2 text-sm">
-        <input type="checkbox" className="h-5 w-5 accent-[#1C1B19]" checked={f.has_tax_invoice} onChange={(e) => setF({ ...f, has_tax_invoice: e.target.checked })} />{t('acct.tax_invoice')}
+        <input type="checkbox" className="h-5 w-5 accent-amberink" checked={f.has_tax_invoice} onChange={(e) => setF({ ...f, has_tax_invoice: e.target.checked })} />{t('acct.tax_invoice')}
       </label>
       <div className="grid grid-cols-2 gap-2">
         <Button disabled={busy} onClick={reject}>{t('acct.reject')}</Button>

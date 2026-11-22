@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../lib/auth'
-import { sb, fmtDate, fmtDateTime, fmtNum, loadSettings } from '../lib/db'
+import { sb, fmtDate, fmtDateTime, fmtNum, loadSettings, ymd } from '../lib/db'
 import { Button, Card, Empty, Field, Loading, Msg, Page, Pill, Row, inputCls, numCls } from '../components/ui'
 
 export interface Keg {
@@ -11,21 +11,81 @@ export interface Keg {
   return_status: 'pending' | 'notified' | 'scheduled' | null; return_date: string | null; cleared_at: string | null
   cleared_how: 'donated' | 'sold' | 'returned' | null; sale_amount: number | null
 }
-interface Reading { keg_id: string; counter: number; created_at: string; created_by: string }
+export interface Reading { id: string; keg_id: string; counter: number; created_at: string; created_by: string }
 
 export const expectedGlasses = (k: Keg) => Math.floor((Number(k.size_l) * 1000) / (k.glass_ml || 500))
 
 export async function loadKegs() {
   const [{ data: kegs }, { data: rd }] = await Promise.all([
     sb.from('kegs').select('*').neq('status', 'cleared').order('tap_no'),
-    sb.from('keg_readings').select('keg_id, counter, created_at, created_by').order('created_at', { ascending: false }).limit(500),
+    sb.from('keg_readings').select('id, keg_id, counter, created_at, created_by').order('created_at', { ascending: false }).limit(500),
   ])
   const latest: Record<string, Reading> = {}
-  for (const r of (rd as Reading[]) ?? []) if (!latest[r.keg_id]) latest[r.keg_id] = r
-  return { kegs: (kegs as Keg[]) ?? [], latest }
+  const readings = (rd as Reading[]) ?? []
+  for (const r of readings) if (!latest[r.keg_id]) latest[r.keg_id] = r
+  return { kegs: (kegs as Keg[]) ?? [], latest, readings }
 }
 
-function OnTapCard({ k, reading, onDone }: { k: Keg; reading?: Reading; onDone: () => void }) {
+/** วันที่ที่เลือก → เวลาที่บันทึก: วันนี้ = ตอนนี้, วันก่อนหน้า = 23:59 ของวันนั้น (เวลาไทย) */
+export const readingTime = (date: string) =>
+  date === ymd() ? new Date().toISOString() : new Date(`${date}T23:59:00+07:00`).toISOString()
+
+function ReadingRow({ r, keg, onDone }: { r: Reading; keg?: Keg; onDone: () => void }) {
+  const { t } = useTranslation()
+  const [edit, setEdit] = useState(false)
+  const [date, setDate] = useState(ymd(new Date(r.created_at)))
+  const [val, setVal] = useState(String(r.counter))
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+
+  const save = async () => {
+    const n = Number(val)
+    if (val === '' || Number.isNaN(n) || n < 0) return
+    setBusy(true)
+    const keepTime = date === ymd(new Date(r.created_at))
+    const { data, error } = await sb.from('keg_readings')
+      .update({ counter: Math.round(n), created_at: keepTime ? r.created_at : readingTime(date) })
+      .eq('id', r.id).select('id')
+    setBusy(false)
+    if (error) { setMsg({ ok: false, text: t('common.save_failed') }); return }
+    if (!data || data.length === 0) { setMsg({ ok: false, text: t('kegs.edit_denied') }); return }
+    setEdit(false); setMsg(null); onDone()
+  }
+
+  if (!edit) {
+    return (
+      <div className="flex min-h-[52px] items-center justify-between gap-2 border-t border-line pt-1.5 text-sm">
+        <span className="flex min-w-0 flex-col">
+          <span className="truncate">TAP {keg?.tap_no ?? '–'} · {keg?.beer_name ?? '–'}</span>
+          <span className="text-xs text-muted">{fmtDateTime(r.created_at)}</span>
+        </span>
+        <span className="flex items-center gap-1">
+          <b className="text-[15px]">{r.counter}</b>
+          <button type="button" aria-label={t('kegs.edit_aria', { when: fmtDateTime(r.created_at) })} onClick={() => setEdit(true)}
+            className="flex h-11 w-11 items-center justify-center rounded-xl bg-paper text-ink">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" /></svg>
+          </button>
+        </span>
+      </div>
+    )
+  }
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl bg-amberbg p-3">
+      <span className="text-xs font-semibold text-amberink">{t('kegs.editing', { tap: keg?.tap_no ?? '–', name: keg?.beer_name ?? '' })}</span>
+      <div className="flex gap-2">
+        <input type="date" className={`${inputCls} min-w-0 flex-1`} aria-label={t('kegs.read_date')} max={ymd()} value={date} onChange={(e) => setDate(e.target.value)} />
+        <input className={numCls} inputMode="numeric" aria-label={t('kegs.counter_now')} value={val} onChange={(e) => setVal(e.target.value)} />
+      </div>
+      <Msg msg={msg} />
+      <div className="grid grid-cols-2 gap-2">
+        <Button onClick={() => { setEdit(false); setMsg(null) }}>{t('common.cancel')}</Button>
+        <Button variant="primary" disabled={busy} onClick={save}>{t('kegs.save_edit')}</Button>
+      </div>
+    </div>
+  )
+}
+
+function OnTapCard({ k, reading, date, onDone }: { k: Keg; reading?: Reading; date: string; onDone: () => void }) {
   const { t } = useTranslation()
   const [val, setVal] = useState('')
   const [busy, setBusy] = useState(false)
@@ -42,7 +102,7 @@ function OnTapCard({ k, reading, onDone }: { k: Keg; reading?: Reading; onDone: 
     const n = Number(val)
     if (!val || Number.isNaN(n) || n < 0) return
     setBusy(true)
-    const { error } = await sb.from('keg_readings').insert({ keg_id: k.id, counter: Math.round(n) })
+    const { error } = await sb.from('keg_readings').insert({ keg_id: k.id, counter: Math.round(n), created_at: readingTime(date) })
     setMsg(error ? { ok: false, text: t('common.save_failed') } : n < sold ? { ok: true, text: t('kegs.lower_warn') } : null)
     if (!error) { setVal(''); onDone() }
     setBusy(false)
@@ -58,16 +118,18 @@ function OnTapCard({ k, reading, onDone }: { k: Keg; reading?: Reading; onDone: 
   }
 
   return (
-    <Card tone={daysLeft != null && daysLeft < 1.5 ? 'warn' : undefined}>
+    <Card>
       <Row>
         <div className="flex flex-col">
-          <span className="text-[11px] font-bold tracking-wider text-muted">TAP {k.tap_no ?? '–'}</span>
-          <span className="text-[15px] font-semibold">{k.beer_name}</span>
+          <span className="flex items-center gap-2.5">
+            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold ${(k.tap_no ?? 0) % 2 ? 'bg-amber text-ink' : 'bg-teal text-white'}`}>{k.tap_no ?? '–'}</span>
+            <span className="text-[15px] font-bold">{k.beer_name}</span>
+          </span>
           <span className="text-xs text-muted">{k.brand} · {k.keg_type === 'pet' ? 'PET' : t('kegs.steel')} {fmtNum(k.size_l)} L · {t('kegs.tapped', { d: fmtDate(k.tapped_at) })}</span>
         </div>
         {daysLeft != null && <Pill tone={daysLeft < 1.5 ? 'warn' : 'ok'}>{t('kegs.days_left', { n: fmtNum(daysLeft, 1) })}</Pill>}
       </Row>
-      <div className="h-1.5 overflow-hidden rounded bg-[#EFEEEA]"><div className={`h-1.5 ${pct < 25 ? 'bg-warn' : 'bg-ok'}`} style={{ width: `${pct}%` }} /></div>
+      <div className="h-2 overflow-hidden rounded-full bg-sand"><div className={`h-2 rounded-full ${pct < 25 ? 'bg-amber' : 'bg-teal'}`} style={{ width: `${pct}%` }} /></div>
       <Row>
         <span>{t('kegs.counter_now')}</span>
         <span className="flex items-center gap-2">
@@ -88,7 +150,8 @@ function OnTapCard({ k, reading, onDone }: { k: Keg; reading?: Reading; onDone: 
 export default function Kegs() {
   const { t } = useTranslation()
   const { profile } = useAuth()
-  const [state, setState] = useState<{ kegs: Keg[]; latest: Record<string, Reading> } | null>(null)
+  const [state, setState] = useState<Awaited<ReturnType<typeof loadKegs>> | null>(null)
+  const [date, setDate] = useState(ymd())
   const [glasses, setGlasses] = useState<number[]>([500])
   const [tapFor, setTapFor] = useState<string | null>(null)
   const [tapNo, setTapNo] = useState('')
@@ -107,6 +170,7 @@ export default function Kegs() {
   const onTap = state.kegs.filter((k) => k.status === 'on_tap').sort((a, b) => (a.tap_no ?? 99) - (b.tap_no ?? 99))
   const inStock = state.kegs.filter((k) => k.status === 'stock')
   const empty = state.kegs.filter((k) => k.status === 'empty')
+  const recent = state.readings.filter((r) => onTap.some((k) => k.id === r.keg_id)).slice(0, 10)
 
   const tap = async (k: Keg) => {
     setBusy(true)
@@ -129,8 +193,23 @@ export default function Kegs() {
   return (
     <Page title={t('kegs.title')} subtitle={t('kegs.subtitle')}>
       <Msg msg={msg} />
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="keg-date" className="text-[13px] font-semibold">{t('kegs.read_date')}</label>
+        <div className="flex gap-2">
+          <input id="keg-date" type="date" className={`${inputCls} min-w-0 flex-1`} max={ymd()} value={date} onChange={(e) => setDate(e.target.value || ymd())} />
+          <Button onClick={() => setDate(ymd())}>{t('kegs.today')}</Button>
+        </div>
+        <span className="text-xs text-muted">{t('kegs.read_date_hint')}</span>
+      </div>
       {onTap.length === 0 && <Empty>{t('kegs.none_on_tap')}</Empty>}
-      {onTap.map((k) => <OnTapCard key={k.id} k={k} reading={state.latest[k.id]} onDone={load} />)}
+      {onTap.map((k) => <OnTapCard key={k.id} k={k} reading={state.latest[k.id]} date={date} onDone={load} />)}
+
+      {recent.length > 0 && (
+        <Card className="!gap-1">
+          <span className="text-[15px] font-bold">{t('kegs.history')}</span>
+          {recent.map((r) => <ReadingRow key={r.id} r={r} keg={state.kegs.find((k) => k.id === r.keg_id)} onDone={load} />)}
+        </Card>
+      )}
 
       <Card>
         <Row><span className="text-[15px] font-semibold">{t('kegs.ready')}</span><Pill>{inStock.length}</Pill></Row>

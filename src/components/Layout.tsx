@@ -26,11 +26,11 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-full">
       {children}
-      <nav aria-label={t('nav.label')} className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-white pb-[max(env(safe-area-inset-bottom),var(--badge-h,0px))]">
-        <div className="mx-auto grid max-w-md grid-cols-5">
+      <nav aria-label={t('nav.label')} className="fixed inset-x-0 bottom-0 z-10 bg-white shadow-[0_-1px_0_var(--color-line)] pb-[max(env(safe-area-inset-bottom),var(--badge-h,0px))]">
+        <div className="mx-auto grid max-w-md grid-cols-5 gap-1 px-1.5 pt-2">
           {tabs.map((tab) => (
             <NavLink key={tab.to} to={tab.to} end={tab.to === '/'}
-              className={({ isActive }: { isActive: boolean }) => `flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] ${isActive ? 'font-bold text-ink' : 'text-muted'}`}>
+              className={({ isActive }: { isActive: boolean }) => `mb-2 flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-[14px] text-[11px] ${isActive ? 'bg-amberbg font-bold text-amberink' : 'text-muted'}`}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icons[tab.key]}</svg>
               {tab.label}
             </NavLink>

@@ -7,6 +7,10 @@ import { pushOrders } from '../lib/gsync'
 import { Button, Card, Empty, LinkButton, Loading, Msg, Page, Pill, Seg, inputCls, numCls } from '../components/ui'
 
 type Cat = Item['category']
+
+/** จุดสีแยกที่เก็บ: ครัว = เขียวฮอป, ห้องเก็บของ = อำพัน, บาร์น้ำ/อื่น ๆ = เข้ม */
+const locDot = (loc: string | null) =>
+  !loc ? 'bg-edge' : loc.startsWith('ในครัว') ? 'bg-teal' : loc.startsWith('ห้องเก็บ') ? 'bg-amber' : 'bg-ink'
 type Mode = 'count' | 'receive'
 
 export default function Stock() {
@@ -51,6 +55,15 @@ export default function Stock() {
       <Seg label={t('stock.category')} value={cat} onChange={setCat}
         options={[{ value: 'food', label: t('cat.food') }, { value: 'can_beer', label: t('cat.can_beer') }, { value: 'supply', label: t('cat.supply') }]} />
       <input className={inputCls} type="search" placeholder={t('common.search')} aria-label={t('common.search')} value={q} onChange={(e) => setQ(e.target.value)} />
+      {list.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <div className="flex justify-between text-[13px]">
+            <span className="font-semibold">{t('stock.progress', { done: filled.filter(([id]) => list.some((x) => x.id === id)).length, total: list.length })}</span>
+            <span className="text-muted">{t('stock.low_count', { count: list.filter((x) => isLow(data, x)).length })}</span>
+          </div>
+          <div className="h-2 rounded-full bg-sand"><div className="h-2 rounded-full bg-teal" style={{ width: `${Math.round((filled.filter(([id]) => list.some((x) => x.id === id)).length / list.length) * 100)}%` }} /></div>
+        </div>
+      )}
       <Msg msg={msg} />
       {list.length === 0 && <Empty>{t('stock.empty')}</Empty>}
       {list.map((it, i) => {
@@ -59,7 +72,12 @@ export default function Stock() {
         const sp = data.products.find((p) => p.item_id === it.id && p.supplier_id === it.default_supplier_id)
         return (
           <Fragment key={it.id}>
-          {head && <h2 className="mt-2 text-sm font-bold text-muted">{it.location ? it.location.replace(/_/g, ' · ') : t('stock.no_location')}</h2>}
+          {head && (
+            <h2 className="mt-2 flex items-center gap-2 text-[13px] font-bold">
+              <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-full ${locDot(it.location)}`} />
+              {it.location ? it.location.replace(/_/g, ' · ') : t('stock.no_location')}
+            </h2>
+          )}
           <Card tone={low ? 'bad' : undefined} className="!flex-row items-center !gap-3 !p-3.5">
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="text-[15px] font-semibold">{pickName(it)}</span>
@@ -76,7 +94,7 @@ export default function Stock() {
           </Fragment>
         )
       })}
-      <div className="sticky bottom-16 z-10 grid grid-cols-2 gap-2 bg-paper py-2">
+      <div className="sticky bottom-[calc(5rem+var(--badge-h,0px))] z-10 grid grid-cols-2 gap-2 bg-paper py-2">
         <LinkButton to="/stock/waste">{t('home.q_waste')}</LinkButton>
         <Button variant="primary" disabled={busy || filled.length === 0} onClick={save}>
           {mode === 'count' ? t('stock.save_count', { count: filled.length }) : t('stock.save_receive', { count: filled.length })}

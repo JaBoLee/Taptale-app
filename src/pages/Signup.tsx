@@ -5,7 +5,7 @@ import { useAuth } from '../lib/auth'
 import LangSwitch from '../components/LangSwitch'
 import PasswordInput from '../components/PasswordInput'
 
-const field = 'h-12 rounded-[10px] border border-[#D9D6D0] bg-white px-3 text-base text-ink'
+const field = 'h-12 rounded-xl border-[1.5px] border-edge bg-field px-3 text-base text-ink'
 
 export default function Signup() {
   const { t } = useTranslation()

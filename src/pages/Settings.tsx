@@ -54,7 +54,7 @@ export default function Settings() {
   }
 
   const timeInput = (i: number, k: 'start_time' | 'end_time') => (
-    <input type="time" aria-label={`${shifts[i].code} ${k}`} className="h-10 w-28 rounded-lg border border-[#D9D6D0] bg-white px-2 text-sm"
+    <input type="time" aria-label={`${shifts[i].code} ${k}`} className="h-10 w-28 rounded-lg border border-edge bg-white px-2 text-sm"
       value={shifts[i][k].slice(0, 5)} onChange={(e) => setShifts(shifts.map((x, j) => (j === i ? { ...x, [k]: e.target.value } : x)))} />
   )
 
@@ -83,8 +83,8 @@ export default function Settings() {
           <Field label={t('set.sick_days')}><input className={inputCls} inputMode="numeric" value={s.sick_days} onChange={(e) => set('sick_days', e.target.value)} /></Field>
           <Field label={t('set.personal_days')}><input className={inputCls} inputMode="numeric" value={s.personal_days} onChange={(e) => set('personal_days', e.target.value)} /></Field>
         </div>
-        <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5 accent-[#1C1B19]" checked={!!s.sick_paid} onChange={(e) => set('sick_paid', e.target.checked ? '1' : '')} />{t('set.sick_paid')}</label>
-        <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5 accent-[#1C1B19]" checked={!!s.personal_paid} onChange={(e) => set('personal_paid', e.target.checked ? '1' : '')} />{t('set.personal_paid')}</label>
+        <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5 accent-amberink" checked={!!s.sick_paid} onChange={(e) => set('sick_paid', e.target.checked ? '1' : '')} />{t('set.sick_paid')}</label>
+        <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5 accent-amberink" checked={!!s.personal_paid} onChange={(e) => set('personal_paid', e.target.checked ? '1' : '')} />{t('set.personal_paid')}</label>
       </Card>
       <Card>
         <span className="text-[15px] font-semibold">{t('set.shop')}</span>
