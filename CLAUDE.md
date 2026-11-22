@@ -16,7 +16,7 @@
 
 ## สถานะการตั้งค่า (22 พ.ย. 2569)
 - GitHub: `JaBoLee/Taptale-app` (**Public**) · เว็บหลัก GitHub Pages → https://jabolee.github.io/Taptale-app/ (workflow `.github/workflows/pages.yml`, base path `/Taptale-app/`, secret `VITE_SUPABASE_ANON_KEY`, 404.html = SPA fallback)
-- Netlify (https://taptale.netlify.app) ยัง auto-deploy จาก main อยู่ — เลิกใช้ได้เมื่อบอสยืนยัน
+- Netlify (https://taptale.netlify.app): หยุด build แล้ว (netlify.toml `ignore = "exit 0"`, 22 พ.ย.) เพราะเครดิตฟรีหมด · เว็บเก่าค้างเวอร์ชันเดิม · ลบเว็บ/ตัดการเชื่อม GitHub ใน Netlify ตอนบอสเปิดคอม
 - Supabase project ref `ddmltpvqvuvxqcflrrvj` (Singapore) · รัน migration 0001–0005 แล้ว (ผ่าน SQL editor) · **0006–0008 ยังไม่ได้รัน** (0006: keg edit policy, payment_fixes, last_cash_close เฉพาะเจ้าของ; 0007: kegs.expected_glasses; 0008: พนักงานดึงถังที่กดหมดผิดกลับได้ใน 3 วัน) — รันเมื่อบอสเปิดคอม
 - Edge Functions deploy แล้ว (ผ่าน dashboard editor): `manage-users`, `translate`, `google-sync`
 - สมัครเองได้ (Allow sign up เปิด, Confirm email ปิด) แต่บัญชีใหม่รออนุมัติ (active=false) จนเจ้าของอนุมัติใน /users
