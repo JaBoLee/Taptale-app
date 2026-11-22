@@ -14,9 +14,10 @@
 ## สเปกระบบ
 
 
-## สถานะการตั้งค่า (10 พ.ย. 2569)
-- GitHub: `JaBoLee/Taptale-app` (Private) · Netlify auto-deploy จาก main → https://taptale.netlify.app (Public)
-- Supabase project ref `ddmltpvqvuvxqcflrrvj` (Singapore) · รัน migration 0001–0004 แล้ว (ผ่าน SQL editor)
+## สถานะการตั้งค่า (22 พ.ย. 2569)
+- GitHub: `JaBoLee/Taptale-app` (**Public**) · เว็บหลัก GitHub Pages → https://jabolee.github.io/Taptale-app/ (workflow `.github/workflows/pages.yml`, base path `/Taptale-app/`, secret `VITE_SUPABASE_ANON_KEY`, 404.html = SPA fallback)
+- Netlify (https://taptale.netlify.app) ยัง auto-deploy จาก main อยู่ — เลิกใช้ได้เมื่อบอสยืนยัน
+- Supabase project ref `ddmltpvqvuvxqcflrrvj` (Singapore) · รัน migration 0001–0005 แล้ว (ผ่าน SQL editor)
 - Edge Functions deploy แล้ว (ผ่าน dashboard editor): `manage-users`, `translate`, `google-sync`
 - สมัครเองได้ (Allow sign up เปิด, Confirm email ปิด) แต่บัญชีใหม่รออนุมัติ (active=false) จนเจ้าของอนุมัติใน /users
 - พิกัดร้าน 13.7055114, 100.5063924 รัศมี 100 ม. · photo bucket `photos` (private)
@@ -24,7 +25,8 @@
 - หน้าออกแบบ 16 หน้า: https://claude.ai/artifact/5zxHrJkZ5a6rupbrPuxfk1
 - PWA ติดตั้งลงหน้าจอได้ (การ์ดติดตั้งในหน้าแรก/ล็อกอิน) · ไอคอนยังเป็น "T&T" ชั่วคราว → รอโลโก้ แล้วรัน `python3 scripts/make_icons.py logo.png`
 - แปลชื่ออัตโนมัติ th→en/my (ตอนออกจากช่อง + ปุ่ม "แปลใหม่") ใช้ MyMemory ฟรี; ใส่ secret `ANTHROPIC_API_KEY` จะสลับไปใช้ Claude อัตโนมัติ
-- ป้าย "Powered by Netlify" ซ่อนไม่ได้บนแผนฟรี (ห้ามซ่อน/บัง/ย่อ) → src/lib/hostBadge.ts วัดป้ายแล้วยกเมนูล่างขึ้น (--badge-h); บอสว่าเมนูสูงไป แต่ให้รอย้ายไป GitHub Pages แล้วค่อยจัดหน้าใหม่ (บอสจะบอกวันย้าย)
+- ป้าย "Powered by Netlify" มีเฉพาะบน Netlify (ห้ามซ่อน/บัง/ย่อ) → src/lib/hostBadge.ts ยกเมนูเฉพาะเมื่อเจอป้าย; บน GitHub Pages เมนูชิดล่างปกติ
+- วัตถุดิบ: นำเข้า 78 รายการจากแท็บ Stock_New (Google Sheet "สต๊อก Tap&Tale") ด้วย supabase/seed/2026-11-22_stock_new.sql แล้ว; items มี location + sort_order หน้านับสต๊อกจัดกลุ่มตามที่เก็บ; ยังไม่นำเข้ายอดคงเหลือ (หน่วยในชีตปนกัน) ให้พนักงานนับรอบแรกในแอป
 - Google (บัญชี mathfirststep@gmail.com): Cloud project `taptale-514303`, เปิด Drive + Sheets API, OAuth consent "Tap and Tale" External **In production**, scope `drive.file` เท่านั้น, OAuth Web client (redirect = OAuth Playground), privacy page `/privacy.html`
 - Supabase secrets ที่บอสใส่แล้ว: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN
 - ยังไม่ได้ทำ: ทดสอบ "สำรองข้อมูลตอนนี้" ครั้งแรก, ตั้ง Cron 07:00 (ต้องติดตั้ง Cron integration ก่อน), แชร์ Sheet ดูอย่างเดียวให้เพื่อน, LINE OA (พักไว้), AI อ่านใบเสร็จ (ต้องมี ANTHROPIC_API_KEY)
