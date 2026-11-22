@@ -115,7 +115,7 @@ export default function Home() {
   const header = (
     <header className="flex items-center justify-between gap-3">
       <div className="flex flex-col">
-        <span className="text-[13px] text-muted">Tap&amp;Tale</span>
+        <img src={`${import.meta.env.BASE_URL ?? '/'}logo.png`} alt="Tap&Tale" width={56} height={50} className="mb-1 h-10 w-auto mix-blend-multiply" />
         <span className="text-2xl font-bold">{profile ? t('home.hello', { name: profile.display_name }) : 'Tap&Tale'}</span>
       </div>
       <LangSwitch />

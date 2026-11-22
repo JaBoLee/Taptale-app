@@ -27,12 +27,12 @@ export default function Login() {
     <main className="mx-auto flex min-h-full max-w-md flex-col">
       <div className="flex flex-col gap-7 bg-ink px-5 pb-16 pt-5 text-white">
         <div className="flex justify-end"><LangSwitch /></div>
-        <div className="flex items-center gap-3.5">
-          <div className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-[18px] bg-amber text-xl font-bold text-ink">T&amp;T</div>
-          <div className="flex flex-col">
-            <h1 className="text-[28px] font-bold leading-tight">Tap&amp;Tale</h1>
-            <p className="text-sm text-herosub">{t('app.tagline')}</p>
+        <div className="flex flex-col items-center gap-3">
+          <div className="rounded-[22px] bg-white px-5 py-3">
+            <img src={`${import.meta.env.BASE_URL ?? '/'}logo.png`} alt="Tap&Tale" width={180} height={161} className="h-[150px] w-auto" />
           </div>
+          <h1 className="sr-only">Tap&amp;Tale</h1>
+          <p className="text-sm text-herosub">{t('app.tagline')}</p>
         </div>
       </div>
       <div className="-mt-10 flex flex-col gap-3.5 px-4 pb-10">

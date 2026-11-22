@@ -14,7 +14,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: { navigateFallbackDenylist: [/\/privacy/] },
-      includeAssets: ['icon.svg', 'apple-touch-icon.png', 'favicon-32.png'],
+      includeAssets: ['icon.svg', 'apple-touch-icon.png', 'favicon-32.png', 'logo.png'],
       manifest: {
         name: 'Tap&Tale',
         short_name: 'Tap&Tale',
@@ -22,7 +22,7 @@ export default defineConfig({
         lang: 'th',
         start_url: base,
         display: 'standalone',
-        background_color: '#F7F7F5',
+        background_color: '#F6F3EE',
         id: base,
         scope: base,
         orientation: 'portrait',

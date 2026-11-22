@@ -23,7 +23,7 @@
 - พิกัดร้าน 13.7055114, 100.5063924 รัศมี 100 ม. · photo bucket `photos` (private)
 - บัญชีเจ้าของแรก: `boss` · แผน: เจ้าของ 5 คน พนักงาน 3 คน เจ้าของเพิ่ม/ลดเองในแอป
 - หน้าออกแบบ 16 หน้า: https://claude.ai/artifact/5zxHrJkZ5a6rupbrPuxfk1
-- PWA ติดตั้งลงหน้าจอได้ (การ์ดติดตั้งในหน้าแรก/ล็อกอิน) · ไอคอนยังเป็น "T&T" ชั่วคราว → รอโลโก้ แล้วรัน `python3 scripts/make_icons.py logo.png`
+- PWA ติดตั้งลงหน้าจอได้ (การ์ดติดตั้งในหน้าแรก/ล็อกอิน) · ไอคอน = โลโก้ร้าน (public/logo.png ตัดขอบแล้ว, 23 พ.ย.) · เปลี่ยนโลโก้: `python3 scripts/make_icons.py public/logo.png`
 - แปลชื่ออัตโนมัติ th→en/my (ตอนออกจากช่อง + ปุ่ม "แปลใหม่") ใช้ MyMemory ฟรี; ใส่ secret `ANTHROPIC_API_KEY` จะสลับไปใช้ Claude อัตโนมัติ
 - ป้าย "Powered by Netlify" มีเฉพาะบน Netlify (ห้ามซ่อน/บัง/ย่อ) → src/lib/hostBadge.ts ยกเมนูเฉพาะเมื่อเจอป้าย; บน GitHub Pages เมนูชิดล่างปกติ
 - วัตถุดิบ: นำเข้า 78 รายการจากแท็บ Stock_New (Google Sheet "สต๊อก Tap&Tale") ด้วย supabase/seed/2026-11-22_stock_new.sql แล้ว; items มี location + sort_order หน้านับสต๊อกจัดกลุ่มตามที่เก็บ; ยังไม่นำเข้ายอดคงเหลือ (หน่วยในชีตปนกัน) ให้พนักงานนับรอบแรกในแอป
