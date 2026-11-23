@@ -199,11 +199,15 @@ Deno.serve(async (req) => {
     await writeTab(gt, files.sheet_id, 'ต้องสั่ง', await ordersRows(sb))
     if (mode === 'orders') return json({ ok: true, mode, sheet_url: files.sheet_url })
 
-    const tables = ['profiles', 'shift_types', 'shift_assignments', 'attendance', 'leave_requests', 'suppliers', 'items', 'supplier_products',
+    const tables: string[] = ['profiles', 'shift_types', 'shift_assignments', 'attendance', 'leave_requests', 'suppliers', 'items', 'supplier_products',
       'stock_events', 'menus', 'recipe_lines', 'kegs', 'keg_readings', 'receipts', 'shift_closes', 'cash_movements', 'ledger', 'purchase_marks']
     for (const tb of tables) {
       const order = tb === 'shift_types' ? 'code' : tb === 'recipe_lines' ? 'menu_id' : 'id'
       await writeTab(gt, files.sheet_id, tb, toRows(await allRows(sb, tb, order)))
+    }
+    // ตารางที่เพิ่มภายหลัง (ข้ามถ้ายังไม่มีในฐานข้อมูล)
+    for (const [tb, order] of [['payment_fixes', 'id'], ['staff_pay', 'profile_id'], ['public_holidays', 'holiday_date']] as const) {
+      try { await writeTab(gt, files.sheet_id, tb, toRows(await allRows(sb, tb, order))); tables.push(tb) } catch (e) { console.warn(tb, String(e)) }
     }
     await writeTab(gt, files.sheet_id, 'current_stock', toRows(await allRows(sb, 'current_stock', 'item_id')))
     const moved = await syncPhotos(gt, sb, files.photos_folder_id)
