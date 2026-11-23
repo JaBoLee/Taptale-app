@@ -93,7 +93,13 @@
     "approve": "Approve",
     "reject": "Reject",
     "approved": "Approved",
-    "rejected": "Rejected"
+    "rejected": "Rejected",
+    "salary": "Monthly salary (THB)",
+    "ot_rate": "OT (THB/hour)",
+    "start_date": "Start date",
+    "start_hint": "Used for 6 days’ annual leave after 1 year",
+    "pay_line": "Salary {{salary}} · OT {{ot}}/h",
+    "pay_after_add": "After adding, tap “Edit” to set salary, OT and start date"
   },
   "pw": {
     "show": "Show password",
@@ -376,7 +382,25 @@
     "republish": "Publish again",
     "published": "Published — staff can see it",
     "is_published": "This week is published — changes show immediately",
-    "not_published": "Not published — staff can't see it yet"
+    "not_published": "Not published — staff can't see it yet",
+    "lt_sick": "Sick leave",
+    "lt_personal": "Personal leave",
+    "lt_holiday": "Public holiday (in lieu)",
+    "lt_annual": "Annual leave",
+    "lt_unpaid": "Unpaid leave",
+    "lt_sick_hint": "Unwell",
+    "lt_personal_hint": "Personal matters",
+    "lt_holiday_hint": "The shop is open every day — take a past public holiday on another day",
+    "lt_annual_hint": "6 days a year after 1 year of work",
+    "lt_unpaid_hint": "Day off with a matching salary deduction",
+    "which_holiday": "Which holiday",
+    "no_holiday": "No holiday available",
+    "pick_holiday": "Pick the public holiday to use",
+    "holiday_after": "Must be after {{date}}",
+    "annual_none": "No annual leave available yet, or all used",
+    "holiday_left": "{{n}} available",
+    "annual_after_year": "After 1 year",
+    "unpaid_used": "{{n}} this year"
   },
   "close": {
     "title": "Close shift & cash drawer",
@@ -481,7 +505,11 @@
     "absent": "Absent (scheduled, no clock-in) {{n}}",
     "export": "Export payroll",
     "export_att": "Export attendance",
-    "rules_note": "Calculated from the schedule, actual clock times and approved leave · rates are in Settings"
+    "rules_note": "Calculated from the schedule, actual clock times and approved leave · rates are in Settings",
+    "salary_line": "Salary ({{n}} shifts worked)",
+    "ot_hours": "OT {{h}} h × {{rate}}",
+    "leave_all": "Sick {{sick}} · Personal {{personal}} · Holiday {{holiday}} · Annual {{annual}}",
+    "unpaid": "Unpaid leave {{n}} days (salary ÷ 30)"
   },
   "set": {
     "title": "Shop settings",
@@ -575,5 +603,19 @@
     "save_failed": "Shift closed, but the payment-method fixes did not save — tell an owner the bill numbers",
     "owner_title": "Wrong payment methods (14 days)",
     "by": "{{name}} · {{when}}"
+  },
+  "hol": {
+    "title": "Shop public holidays",
+    "hint": "The shop is open daily; staff can take these as days off after the date has passed",
+    "none": "No holidays set for this year",
+    "passed": "Passed",
+    "remove": "Remove {{name}}",
+    "name": "Holiday name",
+    "add": "Add holiday",
+    "need": "Enter a date and a name",
+    "dup": "That date is already a holiday",
+    "in_use": "Can’t remove — staff have used this holiday",
+    "prev_year": "Previous year",
+    "next_year": "Next year"
   }
 }

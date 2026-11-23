@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useAuth, type Role } from '../lib/auth'
 import PasswordInput from '../components/PasswordInput'
+import { fmtMoney } from '../lib/db'
+import type { StaffPay } from '../lib/leave'
 
 interface Row {
   id: string
@@ -38,9 +40,12 @@ export default function Users() {
   const [editing, setEditing] = useState<string | null>(null)
   const [form, setForm] = useState({ username: '', display_name: '', password: '', role: 'staff' as Role, wage_per_shift: '' })
   const [approveForm, setApproveForm] = useState<Record<string, { role: Role; wage: string }>>({})
-  const [edit, setEdit] = useState({ display_name: '', role: 'staff' as Role, wage_per_shift: '', password: '' })
+  const [edit, setEdit] = useState({ display_name: '', role: 'staff' as Role, wage_per_shift: '', password: '', salary: '', ot_rate: '', start_date: '' })
+  const [pay, setPay] = useState<Record<string, StaffPay> | null>(null) // null = ยังไม่มีตาราง staff_pay (ก่อนรัน migration 0009)
 
   const load = useCallback(async () => {
+    const sp = await supabase!.from('staff_pay').select('profile_id, monthly_salary, ot_rate, start_date')
+    setPay(sp.error ? null : Object.fromEntries(((sp.data as StaffPay[]) ?? []).map((x) => [x.profile_id, x])))
     const { data } = await supabase!.from('profiles').select('id, username, display_name, role, active, wage_per_shift, approved_at').order('role').order('username')
     setRows((data as Row[]) ?? [])
   }, [])
@@ -59,16 +64,32 @@ export default function Users() {
     setBusy(false)
   }
 
+  /** บันทึกเงินเดือน / OT ต่อชั่วโมง / วันเริ่มงาน (ตาราง staff_pay — เจ้าของเท่านั้น) */
+  const savePay = async (id: string, salary: string, ot: string, start: string): Promise<string | null> => {
+    const prev = pay?.[id]
+    const { error } = await supabase!.from('staff_pay').upsert({
+      profile_id: id,
+      monthly_salary: salary === '' ? Number(prev?.monthly_salary ?? 0) : Number(salary) || 0,
+      ot_rate: ot === '' ? Number(prev?.ot_rate ?? 0) : Number(ot) || 0,
+      start_date: start || prev?.start_date || null,
+      updated_at: new Date().toISOString(),
+    })
+    return error ? error.message : null
+  }
+
   const startEdit = (r: Row) => {
     setEditing(r.id)
-    setEdit({ display_name: r.display_name, role: r.role, wage_per_shift: String(r.wage_per_shift ?? ''), password: '' })
+    const p = pay?.[r.id]
+    setEdit({ display_name: r.display_name, role: r.role, wage_per_shift: String(r.wage_per_shift ?? ''), password: '',
+      salary: p ? String(p.monthly_salary) : '', ot_rate: p ? String(p.ot_rate) : '', start_date: p?.start_date ?? '' })
     setMsg(null)
   }
 
   const save = async (r: Row) => {
     setBusy(true)
-    const err = await call({ action: 'update', id: r.id, display_name: edit.display_name, role: edit.role,
-      wage_per_shift: edit.wage_per_shift === '' ? null : Number(edit.wage_per_shift), password: edit.password || undefined })
+    let err = await call({ action: 'update', id: r.id, display_name: edit.display_name, role: edit.role,
+      wage_per_shift: pay || edit.wage_per_shift === '' ? null : Number(edit.wage_per_shift), password: edit.password || undefined })
+    if (!err && pay && edit.role === 'staff') err = await savePay(r.id, edit.salary, edit.ot_rate, edit.start_date)
     report(err, 'users.saved')
     if (!err) { setEditing(null); load() }
     setBusy(false)
@@ -85,7 +106,8 @@ export default function Users() {
   const approve = async (r: Row) => {
     const f = approveForm[r.id] ?? { role: 'staff' as Role, wage: '' }
     setBusy(true)
-    const err = await call({ action: 'update', id: r.id, active: true, role: f.role, wage_per_shift: f.wage === '' ? null : Number(f.wage) })
+    let err = await call({ action: 'update', id: r.id, active: true, role: f.role, wage_per_shift: pay || f.wage === '' ? null : Number(f.wage) })
+    if (!err && pay && f.role === 'staff' && f.wage !== '') err = await savePay(r.id, f.wage, '', '')
     report(err, 'users.approved')
     if (!err) load()
     setBusy(false)
@@ -137,7 +159,7 @@ export default function Users() {
                     <select className={input} value={f.role} onChange={(e) => setF({ role: e.target.value as Role })}>
                       <option value="staff">{t('home.staff')}</option><option value="owner">{t('home.owner')}</option>
                     </select></label>
-                  <label className="flex flex-col gap-1 text-xs text-muted">{t('users.wage')}
+                  <label className="flex flex-col gap-1 text-xs text-muted">{pay ? t('users.salary') : t('users.wage')}
                     <input className={input} inputMode="decimal" value={f.wage} onChange={(e) => setF({ wage: e.target.value })} /></label>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -157,6 +179,9 @@ export default function Users() {
               <div className="flex flex-col">
                 <span className="text-[15px] font-semibold">{r.display_name}</span>
                 <span className="text-xs text-muted">{r.username} · {r.role === 'owner' ? t('home.owner') : t('home.staff')}{r.active ? '' : ` · ${t('users.disabled')}`}</span>
+                {r.role === 'staff' && pay?.[r.id] && (
+                  <span className="text-xs font-semibold text-tealink">{t('users.pay_line', { salary: fmtMoney(pay[r.id].monthly_salary), ot: fmtMoney(pay[r.id].ot_rate) })}</span>
+                )}
               </div>
               {editing !== r.id && <button type="button" className={btn} onClick={() => startEdit(r)}>{t('users.edit')}</button>}
             </div>
@@ -170,9 +195,22 @@ export default function Users() {
                     <select className={input} value={edit.role} onChange={(e) => setEdit({ ...edit, role: e.target.value as Role })}>
                       <option value="staff">{t('home.staff')}</option><option value="owner">{t('home.owner')}</option>
                     </select></label>
-                  <label className="flex flex-col gap-1 text-xs text-muted">{t('users.wage')}
-                    <input className={input} inputMode="decimal" value={edit.wage_per_shift} onChange={(e) => setEdit({ ...edit, wage_per_shift: e.target.value })} /></label>
+                  {!pay && <label className="flex flex-col gap-1 text-xs text-muted">{t('users.wage')}
+                    <input className={input} inputMode="decimal" value={edit.wage_per_shift} onChange={(e) => setEdit({ ...edit, wage_per_shift: e.target.value })} /></label>}
                 </div>
+                {pay && edit.role === 'staff' && (
+                  <div className="flex flex-col gap-2.5 rounded-2xl bg-tealbg p-3">
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <label className="flex flex-col gap-1 text-xs font-semibold text-tealink">{t('users.salary')}
+                        <input className={input} inputMode="decimal" value={edit.salary} onChange={(e) => setEdit({ ...edit, salary: e.target.value })} /></label>
+                      <label className="flex flex-col gap-1 text-xs font-semibold text-tealink">{t('users.ot_rate')}
+                        <input className={input} inputMode="decimal" value={edit.ot_rate} onChange={(e) => setEdit({ ...edit, ot_rate: e.target.value })} /></label>
+                    </div>
+                    <label className="flex flex-col gap-1 text-xs font-semibold text-tealink">{t('users.start_date')}
+                      <input type="date" className={input} value={edit.start_date} onChange={(e) => setEdit({ ...edit, start_date: e.target.value })} /></label>
+                    <span className="text-xs text-tealink">{t('users.start_hint')}</span>
+                  </div>
+                )}
                 <label className="flex flex-col gap-1 text-xs text-muted">{t('users.new_password')}
                   <PasswordInput className={input} autoComplete="new-password" placeholder={t('users.password_hint')} value={edit.password} onChange={(e) => setEdit({ ...edit, password: e.target.value })} /></label>
                 <div className="grid grid-cols-3 gap-2">
@@ -204,10 +242,11 @@ export default function Users() {
             <select className={input} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}>
               <option value="staff">{t('home.staff')}</option><option value="owner">{t('home.owner')}</option>
             </select></label>
-          <label className="flex flex-col gap-1 text-xs text-muted">{t('users.wage')}
-            <input className={input} inputMode="decimal" value={form.wage_per_shift} onChange={(e) => setForm({ ...form, wage_per_shift: e.target.value })} /></label>
+          {!pay && <label className="flex flex-col gap-1 text-xs text-muted">{t('users.wage')}
+            <input className={input} inputMode="decimal" value={form.wage_per_shift} onChange={(e) => setForm({ ...form, wage_per_shift: e.target.value })} /></label>}
         </div>
         <span className="text-xs text-muted">{t('users.username_hint')}</span>
+        {pay && <span className="text-xs text-muted">{t('users.pay_after_add')}</span>}
         <button type="submit" disabled={busy} className={btnP}>{t('users.add')}</button>
       </form>
     </main>

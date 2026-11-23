@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { sb, loadSettings, loadShiftTypes, type Settings as S, type ShiftType } from '../lib/db'
 import { Button, Card, Field, Loading, Msg, Page, Row, inputCls } from '../components/ui'
 import { backupNow } from '../lib/gsync'
+import HolidayManager from '../components/HolidayManager'
 
 const num = (v: string) => (v.trim() === '' ? 0 : Number(v))
 
@@ -115,6 +116,7 @@ export default function Settings() {
           setGBusy(false)
         }}>{gBusy ? t('gs.working') : t('gs.now')}</Button>
       </Card>
+      <HolidayManager />
     </Page>
   )
 }

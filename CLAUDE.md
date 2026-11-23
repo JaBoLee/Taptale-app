@@ -17,7 +17,7 @@
 ## สถานะการตั้งค่า (22 พ.ย. 2569)
 - GitHub: `JaBoLee/Taptale-app` (**Public**) · เว็บหลัก GitHub Pages → https://jabolee.github.io/Taptale-app/ (workflow `.github/workflows/pages.yml`, base path `/Taptale-app/`, secret `VITE_SUPABASE_ANON_KEY`, 404.html = SPA fallback)
 - Netlify (https://taptale.netlify.app): หยุด build แล้ว (netlify.toml `ignore = "exit 0"`, 22 พ.ย.) เพราะเครดิตฟรีหมด · เว็บเก่าค้างเวอร์ชันเดิม · ลบเว็บ/ตัดการเชื่อม GitHub ใน Netlify ตอนบอสเปิดคอม
-- Supabase project ref `ddmltpvqvuvxqcflrrvj` (Singapore) · รัน migration 0001–0005 แล้ว (ผ่าน SQL editor) · **0006–0008 ยังไม่ได้รัน** (0006: keg edit policy, payment_fixes, last_cash_close เฉพาะเจ้าของ; 0007: kegs.expected_glasses; 0008: พนักงานดึงถังที่กดหมดผิดกลับได้ใน 3 วัน) — รันเมื่อบอสเปิดคอม
+- Supabase project ref `ddmltpvqvuvxqcflrrvj` (Singapore) · รัน migration 0001–0005 แล้ว (ผ่าน SQL editor) · **0006–0009 ยังไม่ได้รัน** (0006: keg edit policy, payment_fixes, last_cash_close เฉพาะเจ้าของ; 0007: kegs.expected_glasses; 0008: พนักงานดึงถังที่กดหมดผิดกลับได้ใน 3 วัน; 0009: staff_pay, public_holidays, ประเภทลาใหม่) — รันเมื่อบอสเปิดคอม
 - Edge Functions deploy แล้ว (ผ่าน dashboard editor): `manage-users`, `translate`, `google-sync`
 - สมัครเองได้ (Allow sign up เปิด, Confirm email ปิด) แต่บัญชีใหม่รออนุมัติ (active=false) จนเจ้าของอนุมัติใน /users
 - พิกัดร้าน 13.7055114, 100.5063924 รัศมี 100 ม. · photo bucket `photos` (private)
@@ -66,6 +66,12 @@ React + Vite + TypeScript + Tailwind, PWA บน Netlify, Supabase (Postgres + A
 4. ธีมใหม่ทั้งแอป (ตามหน้า "ดีไซน์ใหม่ · มีสี" ใน artifact)
 5. ปิดกะ: ช่องทางชำระที่กดผิด (ตาราง payment_fixes) หลายรายการ + ผลต่อเงินสด; เจ้าของเห็นในภาพรวม 14 วัน — ซ่อนอัตโนมัติจนกว่าจะรัน 0006
 6. เบียร์สด: วันที่รับถังเข้าตู้ + วันที่จั้ม (เลือกได้/แก้ได้) · แก้วต่อถัง ค่าเริ่มต้น 3.75 แก้ว/ลิตร (20 ล. ≈ 75 แก้ว) แก้รายถังได้หลังรัน 0007 · กด "เบียร์หมด" ผิด → ดึงกลับขึ้นหัวจ่ายได้ภายใน 3 วัน (เจ้าของได้เลย พนักงานหลังรัน 0008)
+
+## งานแก้ 23 พ.ย. (โค้ดขึ้นเว็บแล้ว — ส่วนใหม่ซ่อนจนกว่าจะรัน 0009)
+- พนักงานเป็นรายเดือน: ตาราง staff_pay (monthly_salary, ot_rate บาท/ชม., start_date) เห็นเฉพาะเจ้าของ+เจ้าตัว · ตั้งในหน้า /users ปุ่มแก้ไข
+- เงินเดือน = เงินเดือน − (วันหยุดไม่รับค่าจ้าง + ลาป่วย/ลากิจที่ตั้งว่าไม่จ่าย) × เงินเดือน/30 − สาย + OT ชม. × ot_rate · หน้าเงินเดือนแสดงเฉพาะพนักงาน · ขาดงาน/วันทำงานนอกตาราง แสดงจำนวนแต่ไม่คิดเงินอัตโนมัติ · ไม่มี staff_pay → ใช้แบบเดิม (ค่าแรงต่อกะ)
+- ตารางกะและการลา (Team) แสดงเฉพาะพนักงาน
+- ประเภทหยุด: sick, personal, holiday (ใช้วันหยุดนักขัตฤกษ์ที่ผ่านแล้ว 1 ครั้ง/วัน ตรวจที่ DB), annual (6 วัน/ปี เมื่อครบ 1 ปีจาก start_date), unpaid · เจ้าของใส่วันหยุดของร้านใน /settings
 - ยังไม่ได้: เพิ่ม payment_fixes ในสำรองข้อมูล google-sync (ต้อง deploy function ใหม่)
 
 ## รอคำตอบจากบอส
