@@ -16,8 +16,8 @@
 
 ## สถานะการตั้งค่า (22 พ.ย. 2569)
 - GitHub: `JaBoLee/Taptale-app` (**Public**) · เว็บหลัก GitHub Pages → https://jabolee.github.io/Taptale-app/ (workflow `.github/workflows/pages.yml`, base path `/Taptale-app/`, secret `VITE_SUPABASE_ANON_KEY`, 404.html = SPA fallback)
-- Netlify (https://taptale.netlify.app): หยุด build แล้ว (netlify.toml `ignore = "exit 0"`, 22 พ.ย.) เพราะเครดิตฟรีหมด · เว็บเก่าค้างเวอร์ชันเดิม · ลบเว็บ/ตัดการเชื่อม GitHub ใน Netlify ตอนบอสเปิดคอม
-- Supabase project ref `ddmltpvqvuvxqcflrrvj` (Singapore) · รัน migration 0001–0005 แล้ว (ผ่าน SQL editor) · รัน 0006–0010 แล้ว (23 พ.ย.)
+- Netlify: ลบโปรเจกต์แล้ว (23 พ.ย.) · ลบ netlify.toml แล้ว · ใช้ GitHub Pages อย่างเดียว
+- Supabase project ref `ddmltpvqvuvxqcflrrvj` (Singapore) · รัน migration 0001–0005 แล้ว (ผ่าน SQL editor) · รัน 0006–0011 แล้ว (23 พ.ย.)
 - Edge Functions deploy แล้ว (ผ่าน dashboard editor): `manage-users`, `translate`, `google-sync`
 - สมัครเองได้ (Allow sign up เปิด, Confirm email ปิด) แต่บัญชีใหม่รออนุมัติ (active=false) จนเจ้าของอนุมัติใน /users
 - พิกัดร้าน 13.7055114, 100.5063924 รัศมี 100 ม. · photo bucket `photos` (private)
@@ -29,12 +29,12 @@
 - วัตถุดิบ: นำเข้า 78 รายการจากแท็บ Stock_New (Google Sheet "สต๊อก Tap&Tale") ด้วย supabase/seed/2026-11-22_stock_new.sql แล้ว; items มี location + sort_order หน้านับสต๊อกจัดกลุ่มตามที่เก็บ; ยังไม่นำเข้ายอดคงเหลือ (หน่วยในชีตปนกัน) ให้พนักงานนับรอบแรกในแอป
 - Google (บัญชี mathfirststep@gmail.com): Cloud project `taptale-514303`, เปิด Drive + Sheets API, OAuth consent "Tap and Tale" External **In production**, scope `drive.file` เท่านั้น, OAuth Web client (redirect = OAuth Playground), privacy page `/privacy.html`
 - Supabase secrets ที่บอสใส่แล้ว: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN
-- Google Sheet สำรอง: "Tap&Tale ข้อมูลร้าน" https://docs.google.com/spreadsheets/d/1NlUfOJ2kAEbtwZnUUr01iyzZ6QlIW8gWk_5gisAXzBU/edit (ทดสอบผ่าน 23 พ.ย.) · cron `google-backup-0700` (0 0 * * * UTC) → public.run_google_backup() ส่งโทเคนใช้ครั้งเดียว (cron_tokens) ไปที่ google-sync · google-sync ปิด Verify JWT แล้ว (ฟังก์ชันตรวจสิทธิ์เอง) · retry 429
-- ยังไม่ได้ทำ: แชร์ Sheet ดูอย่างเดียวให้เพื่อน (ต้องได้อีเมลเพื่อน), ลบเว็บ Netlify, LINE OA (พักไว้), AI อ่านใบเสร็จ (ต้องมี ANTHROPIC_API_KEY)
+- Google Sheet สำรอง: "Tap&Tale ข้อมูลร้าน" https://docs.google.com/spreadsheets/d/1NlUfOJ2kAEbtwZnUUr01iyzZ6QlIW8gWk_5gisAXzBU/edit (ทดสอบผ่าน 23 พ.ย.) · cron `google-backup-0700` (0 0 * * 1,4 UTC = จันทร์+พฤหัส 07:00 ไทย, migration 0011) → public.run_google_backup() ส่งโทเคนใช้ครั้งเดียว (cron_tokens) ไปที่ google-sync · google-sync ปิด Verify JWT แล้ว (ฟังก์ชันตรวจสิทธิ์เอง) · retry 429
+- ยังไม่ได้ทำ: แชร์ Sheet ให้หุ้นส่วน (บอสแชร์เอง), LINE OA (พักไว้), AI อ่านใบเสร็จ (ต้องมี ANTHROPIC_API_KEY)
 - ข้อจำกัดการทำงาน: Claude ไม่พิมพ์รหัสลับ/รหัสผ่านลงช่องใด ๆ — บอสวางเอง
 
 ## เทคโนโลยี
-React + Vite + TypeScript + Tailwind, PWA บน Netlify, Supabase (Postgres + Auth + RLS + Edge Functions + pg_cron), react-i18next (th/en/my), LINE OA Messaging API, Google service account สำหรับ Drive + Sheets
+React + Vite + TypeScript + Tailwind, PWA บน GitHub Pages, Supabase (Postgres + Auth + RLS + Edge Functions + pg_cron), react-i18next (th/en/my), LINE OA Messaging API, Google service account สำหรับ Drive + Sheets
 - ล็อกอินด้วย username: แปลงเป็นอีเมลภายใน `<username>@taptale.local`
 - ไม่ใช้ Google Apps Script
 
@@ -56,7 +56,7 @@ React + Vite + TypeScript + Tailwind, PWA บน Netlify, Supabase (Postgres + A
 - นำเงินออก/เข้าลิ้นชัก: เหตุผล (แลกเงิน ซื้อของสด ค่าขนส่ง อื่น ๆ) แนบใบเสร็จได้
 - ใบเสร็จ: AI อ่าน (ผู้ขาย วันที่ ยอด VAT ใบกำกับภาษี) → เจ้าของยืนยัน → รูปเก็บ Google Drive + ลิงก์
 - บัญชี: ลงเอง, นำเข้ายอด POS (Excel/CSV), export
-- สำรองข้อมูลลง Google Sheet ทุกวัน 07:00 (แต่ละตาราง 1 แท็บ + log)
+- สำรองข้อมูลลง Google Sheet จันทร์ + พฤหัส 07:00 (แต่ละตาราง 1 แท็บ + log) · แท็บ "ต้องสั่ง" อัปเดตทันทีเมื่อนับสต๊อก
 - สั่งซื้อ: ระบบไม่สั่งเอง และ Claude ไม่หยิบลงตะกร้า; สร้างแท็บ "ต้องสั่ง" ใน Google Sheet (supplier ชื่อสินค้า ลิงก์ คงเหลือ safety stock จำนวนที่ควรสั่ง รอบสั่ง) ให้ Claude ของเพื่อนอ่าน (แชร์ดูอย่างเดียว); กด "สั่งแล้ว" ในแอป → หายจากแท็บ
 - แจ้งเตือนผ่าน LINE OA
 
