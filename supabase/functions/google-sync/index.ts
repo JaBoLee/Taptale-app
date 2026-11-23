@@ -181,6 +181,13 @@ Deno.serve(async (req) => {
   const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '')
   const cronSecret = Deno.env.get('CRON_SECRET')
   let allowed = (!!cronSecret && req.headers.get('x-cron-secret') === cronSecret) || token === service
+  // งานตั้งเวลาในฐานข้อมูล: ส่งโทเคนใช้ครั้งเดียว (สร้างโดย public.run_google_backup) — ใช้แล้วลบทิ้ง
+  const cronToken = req.headers.get('x-cron-token')
+  if (!allowed && cronToken && /^[0-9a-f-]{36}$/i.test(cronToken)) {
+    const { data: hit } = await sb.from('cron_tokens').delete().eq('token', cronToken)
+      .gt('created_at', new Date(Date.now() - 10 * 60e3).toISOString()).select('token')
+    allowed = !!hit?.length
+  }
   if (!allowed && token) {
     const { data: u } = await sb.auth.getUser(token)
     if (u?.user) {
