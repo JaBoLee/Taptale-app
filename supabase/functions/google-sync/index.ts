@@ -33,10 +33,17 @@ async function googleToken(): Promise<string> {
 }
 
 async function g(token: string, url: string, init: RequestInit = {}) {
-  const res = await fetch(url, { ...init, headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', ...(init.headers ?? {}) } })
-  const text = await res.text()
-  if (!res.ok) throw new Error(`google ${res.status} ${url.split('?')[0]}: ${text.slice(0, 300)}`)
-  return text ? JSON.parse(text) : {}
+  // Google Sheets จำกัด ~60 คำขอเขียน/นาที → เจอ 429/503 ให้รอแล้วลองใหม่ (สูงสุด 5 ครั้ง)
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url, { ...init, headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', ...(init.headers ?? {}) } })
+    const text = await res.text()
+    if ((res.status === 429 || res.status === 503) && attempt < 5) {
+      await new Promise((r) => setTimeout(r, Math.min(30000, 4000 * 2 ** attempt)))
+      continue
+    }
+    if (!res.ok) throw new Error(`google ${res.status} ${url.split('?')[0]}: ${text.slice(0, 300)}`)
+    return text ? JSON.parse(text) : {}
+  }
 }
 
 interface GState { folder_id?: string; photos_folder_id?: string; sheet_id?: string; sheet_url?: string }
