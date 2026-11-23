@@ -123,7 +123,7 @@ async function ordersRows(sb: SupabaseClient) {
   const ordered = new Set(marks.filter((m) => m.status === 'ordered').map((m) => m.supplier_product_id as string))
   const today = new Date(new Date().toLocaleString('en-US', { timeZone: TZ })).getDay()
   const rows: unknown[][] = [['supplier', 'ชื่อสินค้า (ตาม supplier)', 'ชื่อที่ร้านเรียก', 'ลิงก์สินค้า', 'คงเหลือ', 'ขั้นต่ำ (safety stock)', 'หน่วย',
-    'ควรสั่ง (แพ็ก)', 'ขนาดแพ็ก', 'รอบสั่ง', 'ถึงรอบวันนี้', 'อัปเดตล่าสุด']]
+    'ควรสั่ง (หน่วยนับ)', 'ควรสั่ง (แพ็ก)', 'ขนาดแพ็ก', 'รอบสั่ง', 'ถึงรอบวันนี้', 'อัปเดตล่าสุด']]
   const stamp = nowTh()
   for (const it of items.filter((i) => i.active)) {
     const safety = Number(it.safety_stock) || 0
@@ -133,12 +133,12 @@ async function ordersRows(sb: SupabaseClient) {
     const sp = products.find((p) => p.item_id === it.id && p.supplier_id === it.default_supplier_id)
     if (sp && ordered.has(sp.id as string)) continue
     const short = Math.max(0, safety * 2 - q)
-    const pack = sp ? Number(sp.pack_qty) || 1 : null
+    const pack = sp && Number(sp.pack_qty) > 0 ? Number(sp.pack_qty) : null // ไม่ได้ตั้งขนาดแพ็ก → เว้นว่าง
     const days = (sp?.order_weekdays as number[] | undefined) ?? []
     rows.push([sup?.name ?? '', sp?.product_name ?? '', it.name_th, sp?.url ?? '', q, safety, it.count_unit,
-      pack ? Math.ceil(short / pack) : short, pack ?? '', days.map((d) => DAYS[d]).join(' '), days.includes(today) ? 'ใช่' : '', stamp])
+      Math.ceil(short), pack ? Math.ceil(short / pack) : '', pack ?? '', days.map((d) => DAYS[d]).join(' '), days.includes(today) ? 'ใช่' : '', stamp])
   }
-  if (rows.length === 1) rows.push(['ไม่มีของต้องสั่ง', '', '', '', '', '', '', '', '', '', '', stamp])
+  if (rows.length === 1) rows.push(['ไม่มีของต้องสั่ง', '', '', '', '', '', '', '', '', '', '', '', stamp])
   return rows
 }
 
