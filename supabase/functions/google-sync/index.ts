@@ -133,7 +133,7 @@ async function ordersRows(sb: SupabaseClient) {
     const sp = products.find((p) => p.item_id === it.id && p.supplier_id === it.default_supplier_id)
     if (sp && ordered.has(sp.id as string)) continue
     const short = Math.max(0, safety * 2 - q)
-    const pack = sp && Number(sp.pack_qty) > 0 ? Number(sp.pack_qty) : null // ไม่ได้ตั้งขนาดแพ็ก → เว้นว่าง
+    const pack = sp && Number(sp.pack_qty) > 1 ? Number(sp.pack_qty) : null // ยังไม่ได้ตั้งขนาดแพ็ก (ค่าเริ่มต้น 1) → เว้นว่าง
     const days = (sp?.order_weekdays as number[] | undefined) ?? []
     rows.push([sup?.name ?? '', sp?.product_name ?? '', it.name_th, sp?.url ?? '', q, safety, it.count_unit,
       Math.ceil(short), pack ? Math.ceil(short / pack) : '', pack ?? '', days.map((d) => DAYS[d]).join(' '), days.includes(today) ? 'ใช่' : '', stamp])
