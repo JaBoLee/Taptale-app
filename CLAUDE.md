@@ -74,8 +74,8 @@ React + Vite + TypeScript + Tailwind, PWA บน GitHub Pages, Supabase (Postgre
 - ตารางกะและการลา (Team) แสดงเฉพาะพนักงาน
 - ประเภทหยุด: sick, personal, holiday (ใช้วันหยุดนักขัตฤกษ์ที่ผ่านแล้ว 1 ครั้ง/วัน ตรวจที่ DB), annual (6 วัน/ปี เมื่อครบ 1 ปีจาก start_date), unpaid · เจ้าของใส่วันหยุดของร้านใน /settings
 
-## งานแก้ 24 พ.ย. (โค้ดขึ้นเว็บแล้ว · **ยังไม่ได้รัน SQL**)
-- สูตรเมนูจาก "MENU NAME.pdf" (Drive, 18 MB): migration 0012 (menus.code, kind dish/prep, ingredients_th/en/my) + seed `supabase/seed/2026-11-24_menus.sql` (25 สูตร, ไทย+อังกฤษ, พม่าว่าง, รันซ้ำได้) — ต้องรัน 0012 แล้วตามด้วย seed ใน SQL editor
+## งานแก้ 24 พ.ย. (ขึ้นเว็บแล้ว · รัน 0012 + seed สูตรแล้ว)
+- สูตรเมนูจาก "MENU NAME.pdf" (Drive, 18 MB): migration 0012 (menus.code, kind dish/prep, ingredients_th/en/my) + seed `supabase/seed/2026-11-24_menus.sql` (25 สูตร ไทย/อังกฤษ/พม่า, ผูกสต๊อก 43 บรรทัด, รันซ้ำได้) — รันแล้ว 24 พ.ย.
 - หน้าสูตร: แท็บ เมนูขาย / สูตรเตรียม, ป้ายรหัส, ส่วนผสม + วิธีทำ; MenuEdit มีช่องรหัส/ประเภท/ส่วนผสม (แปลอัตโนมัติ)
 - PDF มีรหัสซ้ำ: ข้าวมันไก่ผสม → ใช้ CR03, ไก่คาราเกะ → SN03; เมนูข้าวมันไก่ 3 แบบ + อโรมาติก 2 แบบ ยังไม่ผูกสต๊อก (ไม่มีปริมาณต่อจาน)
 
