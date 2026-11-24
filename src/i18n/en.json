@@ -196,13 +196,15 @@
     "per_dish": "Amount per dish",
     "min": "Minimum {{n}} dishes",
     "left": "{{qty}} left",
-    "tab_dish": "Menu dishes",
+    "tab_dish": "Food",
     "tab_prep": "Prep recipes",
     "can_make_batch": "Can make {{n}} batches",
     "per_batch": "Per batch (from stock)",
     "ingredients": "Ingredients",
     "steps": "Method",
-    "stock_use": "From stock"
+    "stock_use": "From stock",
+    "tab_drink": "Drinks",
+    "can_make_cup": "Can make {{n}} cups"
   },
   "menuedit": {
     "title": "Edit menu item",
@@ -219,11 +221,12 @@
     "code": "Code",
     "code_hint": "e.g. R01, S03 (optional)",
     "kind": "Type",
-    "kind_dish": "Menu dish",
+    "kind_dish": "Food",
     "kind_prep": "Prep recipe",
     "ing_text": "All ingredients (text)",
     "ing_text_hint": "One per line; may include non-stock items and sub-recipes",
-    "stock_lines": "Stock ingredients used"
+    "stock_lines": "Stock ingredients used",
+    "kind_drink": "Drink"
   },
   "items": {
     "title": "Items & suppliers",

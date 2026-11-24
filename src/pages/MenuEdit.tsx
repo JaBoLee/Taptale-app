@@ -15,7 +15,7 @@ export default function MenuEdit() {
   const isNew = id === 'new'
   const { data } = useStockData()
   const [f, setF] = useState({ name_th: '', name_en: '', name_my: '', steps_th: '', steps_en: '', steps_my: '', min_portions: '1', active: true,
-    code: '', kind: 'dish' as 'dish' | 'prep', ingredients_th: '', ingredients_en: '', ingredients_my: '' })
+    code: '', kind: 'dish' as 'dish' | 'drink' | 'prep', ingredients_th: '', ingredients_en: '', ingredients_my: '' })
   const [lines, setLines] = useState<Line[]>([])
   const [tr, setTr] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -98,7 +98,7 @@ export default function MenuEdit() {
   return (
     <Page title={isNew ? t('menuedit.new') : t('menuedit.title')} back="/recipes">
       <Card>
-        <Seg label={t('menuedit.kind')} value={f.kind} onChange={(v) => setF({ ...f, kind: v })} options={[{ value: 'dish', label: t('menuedit.kind_dish') }, { value: 'prep', label: t('menuedit.kind_prep') }]} />
+        <Seg label={t('menuedit.kind')} value={f.kind} onChange={(v) => setF({ ...f, kind: v })} options={[{ value: 'dish', label: t('menuedit.kind_dish') }, { value: 'drink', label: t('menuedit.kind_drink') }, { value: 'prep', label: t('menuedit.kind_prep') }]} />
         <Field label={t('menuedit.code')} hint={t('menuedit.code_hint')}><input className={inputCls} value={f.code} onChange={(e) => setF({ ...f, code: e.target.value })} /></Field>
         <Field label={t('items.name_th')}><input className={inputCls} value={f.name_th} onChange={(e) => setF({ ...f, name_th: e.target.value })} onBlur={() => fillTr(false)} /></Field>
         <div className="grid grid-cols-2 gap-2.5">

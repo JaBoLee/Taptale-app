@@ -12,7 +12,7 @@ export default function Recipes() {
   const { data } = useStockData()
   const [open, setOpen] = useState<string | null>(null)
   const [q, setQ] = useState('')
-  const [kind, setKind] = useState<'dish' | 'prep'>('dish')
+  const [kind, setKind] = useState<'dish' | 'drink' | 'prep'>('dish')
   const owner = profile?.role === 'owner'
 
   if (!data) return <Page title={t('recipes.title')}><Loading /></Page>
@@ -24,7 +24,7 @@ export default function Recipes() {
 
   return (
     <Page title={t('recipes.title')} right={owner ? <Link to="/menus/new" className="flex h-11 items-center px-2 text-sm font-semibold">{t('common.new')}</Link> : undefined}>
-      <Seg label={t('recipes.title')} value={kind} onChange={setKind} options={[{ value: 'dish', label: t('recipes.tab_dish') }, { value: 'prep', label: t('recipes.tab_prep') }]} />
+      <Seg label={t('recipes.title')} value={kind} onChange={setKind} options={[{ value: 'dish', label: t('recipes.tab_dish') }, { value: 'drink', label: t('recipes.tab_drink') }, { value: 'prep', label: t('recipes.tab_prep') }]} />
       <input className={inputCls} type="search" placeholder={t('common.search')} aria-label={t('common.search')} value={q} onChange={(e) => setQ(e.target.value)} />
       {menus.length === 0 && <Empty>{t('recipes.empty')}</Empty>}
       {menus.map((m) => {
@@ -38,7 +38,7 @@ export default function Recipes() {
           <Card key={m.id} tone={ok ? undefined : 'bad'}>
             <button type="button" className="flex min-h-11 items-center justify-between gap-3 text-left" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : m.id)}>
               <span className="text-[15px] font-semibold">{m.code && <span className="mr-1.5 rounded-md bg-amberbg px-1.5 py-0.5 text-xs font-bold text-amberink">{m.code}</span>}{pickName(m)}{!m.active && ` (${t('recipes.hidden')})`}</span>
-              {p == null ? <Pill>{t('recipes.no_recipe')}</Pill> : ok ? <Pill tone="ok">{t(prep ? 'recipes.can_make_batch' : 'recipes.can_make', { n: p })}</Pill> : <Pill tone="bad">{t('recipes.unavailable')}</Pill>}
+              {p == null ? <Pill>{t('recipes.no_recipe')}</Pill> : ok ? <Pill tone="ok">{t(prep ? 'recipes.can_make_batch' : m.kind === 'drink' ? 'recipes.can_make_cup' : 'recipes.can_make', { n: p })}</Pill> : <Pill tone="bad">{t('recipes.unavailable')}</Pill>}
             </button>
             {isOpen && (
               <>
