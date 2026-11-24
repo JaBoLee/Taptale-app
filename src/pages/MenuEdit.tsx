@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { sb, pickName } from '../lib/db'
 import { useStockData } from '../lib/stock'
 import { autoTranslate } from '../lib/translate'
-import { Button, Card, Field, Loading, Msg, Page, inputCls } from '../components/ui'
+import { Button, Card, Field, Loading, Msg, Page, Seg, inputCls } from '../components/ui'
 
 interface Line { item_id: string; qty: string }
 
@@ -14,7 +14,8 @@ export default function MenuEdit() {
   const nav = useNavigate()
   const isNew = id === 'new'
   const { data } = useStockData()
-  const [f, setF] = useState({ name_th: '', name_en: '', name_my: '', steps_th: '', steps_en: '', steps_my: '', min_portions: '1', active: true })
+  const [f, setF] = useState({ name_th: '', name_en: '', name_my: '', steps_th: '', steps_en: '', steps_my: '', min_portions: '1', active: true,
+    code: '', kind: 'dish' as 'dish' | 'prep', ingredients_th: '', ingredients_en: '', ingredients_my: '' })
   const [lines, setLines] = useState<Line[]>([])
   const [tr, setTr] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -25,7 +26,8 @@ export default function MenuEdit() {
     const m = data.menus.find((x) => x.id === id)
     if (!m) return
     setF({ name_th: m.name_th, name_en: m.name_en ?? '', name_my: m.name_my ?? '', steps_th: m.steps_th ?? '', steps_en: m.steps_en ?? '',
-      steps_my: m.steps_my ?? '', min_portions: String(m.min_portions), active: m.active })
+      steps_my: m.steps_my ?? '', min_portions: String(m.min_portions), active: m.active,
+      code: m.code ?? '', kind: m.kind ?? 'dish', ingredients_th: m.ingredients_th ?? '', ingredients_en: m.ingredients_en ?? '', ingredients_my: m.ingredients_my ?? '' })
     setLines(data.lines.filter((l) => l.menu_id === id).map((l) => ({ item_id: l.item_id, qty: String(l.qty) })))
   }, [data, id, isNew])
 
@@ -34,18 +36,21 @@ export default function MenuEdit() {
   const fillTr = async (force: boolean) => {
     const needName = !!f.name_th.trim() && (force || !f.name_en.trim() || !f.name_my.trim())
     const needSteps = !!f.steps_th.trim() && (force || !f.steps_en.trim() || !f.steps_my.trim())
-    if (!needName && !needSteps) return f
+    const needIng = !!f.ingredients_th.trim() && (force || !f.ingredients_en.trim() || !f.ingredients_my.trim())
+    if (!needName && !needSteps && !needIng) return f
     setTr(true)
-    const [n, st] = await Promise.all([
+    const [n, st, ig] = await Promise.all([
       needName ? autoTranslate([f.name_th], 'menu') : Promise.resolve(null),
       needSteps ? autoTranslate([f.steps_th], 'steps') : Promise.resolve(null),
+      needIng ? autoTranslate([f.ingredients_th], 'steps') : Promise.resolve(null),
     ])
     setTr(false)
-    if (force && !n && !st) setMsg({ ok: false, text: t('tr.failed') })
+    if (force && !n && !st && !ig) setMsg({ ok: false, text: t('tr.failed') })
     const pick = (cur: string, v: string | undefined) => (v && (force || !cur.trim()) ? v : cur)
     const nf = { ...f,
       name_en: pick(f.name_en, n?.en[0]), name_my: pick(f.name_my, n?.my[0]),
-      steps_en: pick(f.steps_en, st?.en[0]), steps_my: pick(f.steps_my, st?.my[0]) }
+      steps_en: pick(f.steps_en, st?.en[0]), steps_my: pick(f.steps_my, st?.my[0]),
+      ingredients_en: pick(f.ingredients_en, ig?.en[0]), ingredients_my: pick(f.ingredients_my, ig?.my[0]) }
     setF(nf)
     return nf
   }
@@ -56,7 +61,9 @@ export default function MenuEdit() {
     const g = await fillTr(false)
     const row = { name_th: g.name_th.trim(), name_en: g.name_en.trim() || null, name_my: g.name_my.trim() || null,
       steps_th: g.steps_th || null, steps_en: g.steps_en || null, steps_my: g.steps_my || null,
-      min_portions: Math.max(1, Number(f.min_portions) || 1), active: f.active }
+      min_portions: Math.max(1, Number(f.min_portions) || 1), active: f.active,
+      code: f.code.trim().toUpperCase() || null, kind: f.kind,
+      ingredients_th: g.ingredients_th || null, ingredients_en: g.ingredients_en || null, ingredients_my: g.ingredients_my || null }
     let menuId = id as string
     if (isNew) {
       const { data: ins, error } = await sb.from('menus').insert(row).select('id').single()
@@ -91,6 +98,8 @@ export default function MenuEdit() {
   return (
     <Page title={isNew ? t('menuedit.new') : t('menuedit.title')} back="/recipes">
       <Card>
+        <Seg label={t('menuedit.kind')} value={f.kind} onChange={(v) => setF({ ...f, kind: v })} options={[{ value: 'dish', label: t('menuedit.kind_dish') }, { value: 'prep', label: t('menuedit.kind_prep') }]} />
+        <Field label={t('menuedit.code')} hint={t('menuedit.code_hint')}><input className={inputCls} value={f.code} onChange={(e) => setF({ ...f, code: e.target.value })} /></Field>
         <Field label={t('items.name_th')}><input className={inputCls} value={f.name_th} onChange={(e) => setF({ ...f, name_th: e.target.value })} onBlur={() => fillTr(false)} /></Field>
         <div className="grid grid-cols-2 gap-2.5">
           <Field label="English"><input className={inputCls} value={f.name_en} onChange={(e) => setF({ ...f, name_en: e.target.value })} /></Field>
@@ -98,7 +107,7 @@ export default function MenuEdit() {
         </div>
         <div className="flex items-center justify-between gap-2">
           <span className="text-[11px] text-muted">{tr ? t('tr.working') : t('tr.hint')}</span>
-          <Button small disabled={tr || (!f.name_th.trim() && !f.steps_th.trim())} onClick={() => fillTr(true)}>{t('tr.again')}</Button>
+          <Button small disabled={tr || (!f.name_th.trim() && !f.steps_th.trim() && !f.ingredients_th.trim())} onClick={() => fillTr(true)}>{t('tr.again')}</Button>
         </div>
         <Field label={t('menuedit.min')} hint={t('menuedit.min_hint')}>
           <input className={inputCls} inputMode="numeric" value={f.min_portions} onChange={(e) => setF({ ...f, min_portions: e.target.value })} />
@@ -110,7 +119,15 @@ export default function MenuEdit() {
       </Card>
 
       <Card>
-        <span className="text-[15px] font-semibold">{t('menuedit.ingredients')}</span>
+        <span className="text-[15px] font-semibold">{t('menuedit.ing_text')}</span>
+        <span className="text-xs text-muted">{t('menuedit.ing_text_hint')}</span>
+        <Field label="ไทย"><textarea className={`${inputCls} h-28 py-2`} value={f.ingredients_th} onChange={(e) => setF({ ...f, ingredients_th: e.target.value })} onBlur={() => fillTr(false)} /></Field>
+        <Field label="English"><textarea className={`${inputCls} h-20 py-2`} value={f.ingredients_en} onChange={(e) => setF({ ...f, ingredients_en: e.target.value })} /></Field>
+        <Field label="မြန်မာ"><textarea className={`${inputCls} h-20 py-2`} value={f.ingredients_my} onChange={(e) => setF({ ...f, ingredients_my: e.target.value })} /></Field>
+      </Card>
+
+      <Card>
+        <span className="text-[15px] font-semibold">{t('menuedit.stock_lines')}</span>
         <span className="text-xs text-muted">{t('menuedit.ing_hint')}</span>
         {lines.map((l, i) => {
           const it = data.items.find((x) => x.id === l.item_id)

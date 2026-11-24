@@ -16,6 +16,8 @@ export interface StockRow { item_id: string; qty: number; last_counted_at: strin
 export interface Menu {
   id: string; name_th: string; name_en: string | null; name_my: string | null
   steps_th: string | null; steps_en: string | null; steps_my: string | null; min_portions: number; active: boolean
+  code?: string | null; kind?: 'dish' | 'prep'
+  ingredients_th?: string | null; ingredients_en?: string | null; ingredients_my?: string | null
 }
 export interface RecipeLine { menu_id: string; item_id: string; qty: number }
 

@@ -195,7 +195,14 @@
     "unavailable": "Unavailable",
     "per_dish": "Amount per dish",
     "min": "Minimum {{n}} dishes",
-    "left": "{{qty}} left"
+    "left": "{{qty}} left",
+    "tab_dish": "Menu dishes",
+    "tab_prep": "Prep recipes",
+    "can_make_batch": "Can make {{n}} batches",
+    "per_batch": "Per batch (from stock)",
+    "ingredients": "Ingredients",
+    "steps": "Method",
+    "stock_use": "From stock"
   },
   "menuedit": {
     "title": "Edit menu item",
@@ -208,7 +215,15 @@
     "ing_hint": "Use the same unit as stock counting, e.g. 0.3 for kg",
     "add_ing": "+ Add ingredient",
     "steps": "Method",
-    "hide": "Hide this item"
+    "hide": "Hide this item",
+    "code": "Code",
+    "code_hint": "e.g. R01, S03 (optional)",
+    "kind": "Type",
+    "kind_dish": "Menu dish",
+    "kind_prep": "Prep recipe",
+    "ing_text": "All ingredients (text)",
+    "ing_text_hint": "One per line; may include non-stock items and sub-recipes",
+    "stock_lines": "Stock ingredients used"
   },
   "items": {
     "title": "Items & suppliers",

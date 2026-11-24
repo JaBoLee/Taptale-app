@@ -15,6 +15,13 @@ export function pickName(row: { name_th?: string | null; name_en?: string | null
   return row.name_th ?? ''
 }
 
+export function pickIngredients(row: { ingredients_th?: string | null; ingredients_en?: string | null; ingredients_my?: string | null }): string {
+  const lang = i18n.language
+  if (lang === 'en' && row.ingredients_en) return row.ingredients_en
+  if (lang === 'my' && row.ingredients_my) return row.ingredients_my
+  return row.ingredients_th ?? ''
+}
+
 export function pickSteps(row: { steps_th?: string | null; steps_en?: string | null; steps_my?: string | null }): string {
   const lang = i18n.language
   if (lang === 'en' && row.steps_en) return row.steps_en
