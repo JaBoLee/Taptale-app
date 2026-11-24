@@ -636,17 +636,17 @@ update public.menus set name_my = coalesce(name_my, 'ကြက်သားကာ
 ၂။ ဆီထဲမှဆယ်၍ ဆီစစ်ပြီး (စိတ်ကြိုက်နှစ်သက်ပါက ကြက်သားဆော့စ်နှင့်အတူ) ပန်းကန်ငယ်တစ်ခုတွင် ပြင်ဆင်၍ တည်ခင်းဧည့်ခံပါ။') where code = 'SN03';
 insert into public.recipe_lines (menu_id, item_id, qty) select m.id, '56467d14-0969-48bd-9100-189f147da2bc', 1 from public.menus m where m.code = 'SN03' and exists (select 1 from public.items where id = '56467d14-0969-48bd-9100-189f147da2bc') on conflict do nothing;
 insert into public.menus (code, kind, name_th, name_en, name_my, ingredients_th, ingredients_en, ingredients_my, steps_th, steps_en, steps_my, min_portions, active)
-select 'CR01', 'dish', 'ข้าวมันไก่', 'Boiled Chicken Rice', 'ကြက်သားပြုတ် ဆီထမင်း', 'ไก่ต้ม (C01) 1 ชิ้น
+select 'CR01', 'dish', 'ข้าวมันไก่', 'Boiled Chicken Rice', 'ကြက်သားပြုတ် ဆီထမင်း', 'ไก่ต้ม (C01) 200 ก.
 ข้าวมัน (R02) 1 ถ้วย
 น้ำจิ้มข้าวมันไก่ (S01) 1 ถ้วยเล็ก
 สต๊อกไก่ (ST01) 1 ถ้วย
 ผักชี
-แตงกวา 3–4 ชิ้น', 'Boiled chicken (C01) 1 pc
+แตงกวา 3–4 ชิ้น', 'Boiled chicken (C01) 200 g
 Chicken rice (R02) 1 cup
 Chicken rice sauce (S01) 1 small cup
 Chicken stock (ST01) 1 cup
 Coriander
-Cucumber 3–4 pcs', 'ကြက်ပြုတ် (C01) 1 တုံး
+Cucumber 3–4 pcs', 'ကြက်ပြုတ် (C01) 200 ဂရမ်
 ကြက်ဆီထမင်း (R02) 1 ခွက်
 ကြက်သားထမင်းဆော့စ် (S01) 1 ခွက်ငယ်
 ကြက်ပြုတ်ရည် (ST01) 1 ခွက်
@@ -665,7 +665,7 @@ Cucumber 3–4 pcs', 'ကြက်ပြုတ် (C01) 1 တုံး
 ၄။ ကြက်ပြုတ်ရည် (ST01) ၁ ခွက်ကို ပူအောင်နွှေးပြီး ဟင်းရည်ပန်းကန်ထဲသို့ ထည့်ပါ။
 ၅။ ကြက်သားထမင်းဆော့စ် (S01) ၁ ခွက်ငယ်ကို ကြက်ဆီထမင်း၊ ဟင်းရည်ပူပူတို့နှင့်အတူ တွဲဖက်တည်ခင်းဧည့်ခံပါ။', 1, true
 where not exists (select 1 from public.menus where code = 'CR01');
-update public.menus set name_my = coalesce(name_my, 'ကြက်သားပြုတ် ဆီထမင်း'), ingredients_my = coalesce(ingredients_my, 'ကြက်ပြုတ် (C01) 1 တုံး
+update public.menus set name_my = coalesce(name_my, 'ကြက်သားပြုတ် ဆီထမင်း'), ingredients_my = coalesce(ingredients_my, 'ကြက်ပြုတ် (C01) 200 ဂရမ်
 ကြက်ဆီထမင်း (R02) 1 ခွက်
 ကြက်သားထမင်းဆော့စ် (S01) 1 ခွက်ငယ်
 ကြက်ပြုတ်ရည် (ST01) 1 ခွက်
@@ -675,18 +675,19 @@ update public.menus set name_my = coalesce(name_my, 'ကြက်သားပြ
 ၃။ သခွားသီး (၃-၄ စိတ်) ကို ပန်းကန်ဘေးတွင် တင်ပြီး ကြက်သားပေါ်တွင် နံနံပင်ဖြင့် အလှဆင်ပါ။
 ၄။ ကြက်ပြုတ်ရည် (ST01) ၁ ခွက်ကို ပူအောင်နွှေးပြီး ဟင်းရည်ပန်းကန်ထဲသို့ ထည့်ပါ။
 ၅။ ကြက်သားထမင်းဆော့စ် (S01) ၁ ခွက်ငယ်ကို ကြက်ဆီထမင်း၊ ဟင်းရည်ပူပူတို့နှင့်အတူ တွဲဖက်တည်ခင်းဧည့်ခံပါ။') where code = 'CR01';
+insert into public.recipe_lines (menu_id, item_id, qty) select m.id, '17c08134-cc79-45f8-8e10-743e4ede44fb', 0.1 from public.menus m where m.code = 'CR01' and exists (select 1 from public.items where id = '17c08134-cc79-45f8-8e10-743e4ede44fb') on conflict do nothing;
 insert into public.menus (code, kind, name_th, name_en, name_my, ingredients_th, ingredients_en, ingredients_my, steps_th, steps_en, steps_my, min_portions, active)
-select 'CR02', 'dish', 'ข้าวมันไก่ทอด', 'Fried Chicken Rice', 'ကြက်ကြော် ဆီထမင်း', 'ไก่ทอด (C02) 1 ชิ้น
+select 'CR02', 'dish', 'ข้าวมันไก่ทอด', 'Fried Chicken Rice', 'ကြက်ကြော် ဆီထမင်း', 'ไก่ทอด (C02) 200 ก.
 ข้าวมัน (R02) 1 ถ้วย
 น้ำจิ้มไก่ (S02) 1 ถ้วยเล็ก
 สต๊อกไก่ (ST01) 1 ถ้วย
 ผักชี
-แตงกวา 3–4 ชิ้น', 'Fried chicken (C02) 1 pc
+แตงกวา 3–4 ชิ้น', 'Fried chicken (C02) 200 g
 Chicken rice (R02) 1 cup
 Sweet chicken sauce (S02) 1 small cup
 Chicken stock (ST01) 1 cup
 Coriander
-Cucumber 3–4 pcs', 'ကြက်ကြော် (C02) 1 တုံး
+Cucumber 3–4 pcs', 'ကြက်ကြော် (C02) 200 ဂရမ်
 ကြက်ဆီထမင်း (R02) 1 ခွက်
 ကြက်ကြော်အချဉ်ရည် (S02) 1 ခွက်ငယ်
 ကြက်ပြုတ်ရည် (ST01) 1 ခွက်
@@ -705,7 +706,7 @@ Cucumber 3–4 pcs', 'ကြက်ကြော် (C02) 1 တုံး
 ၄။ ကြက်ပြုတ်ရည် (ST01) ၁ ခွက်ကို ပူအောင်နွှေးပြီး ဟင်းရည်ပန်းကန်ထဲသို့ ထည့်ပါ။
 ၅။ ကြက်ကြော်အချဉ်ရည် (S02) ၁ ခွက်ငယ်ကို ကြက်ဆီထမင်း၊ ဟင်းရည်ပူပူတို့နှင့်အတူ တွဲဖက်တည်ခင်းဧည့်ခံပါ။', 1, true
 where not exists (select 1 from public.menus where code = 'CR02');
-update public.menus set name_my = coalesce(name_my, 'ကြက်ကြော် ဆီထမင်း'), ingredients_my = coalesce(ingredients_my, 'ကြက်ကြော် (C02) 1 တုံး
+update public.menus set name_my = coalesce(name_my, 'ကြက်ကြော် ဆီထမင်း'), ingredients_my = coalesce(ingredients_my, 'ကြက်ကြော် (C02) 200 ဂရမ်
 ကြက်ဆီထမင်း (R02) 1 ခွက်
 ကြက်ကြော်အချဉ်ရည် (S02) 1 ခွက်ငယ်
 ကြက်ပြုတ်ရည် (ST01) 1 ခွက်
@@ -715,23 +716,24 @@ update public.menus set name_my = coalesce(name_my, 'ကြက်ကြော်
 ၃။ သခွားသီး (၃-၄ စိတ်) ကို ပန်းကန်ဘေးတွင် တင်ပြီး ကြက်ကြော်ပေါ်တွင် နံနံပင်ဖြင့် အလှဆင်ပါ။
 ၄။ ကြက်ပြုတ်ရည် (ST01) ၁ ခွက်ကို ပူအောင်နွှေးပြီး ဟင်းရည်ပန်းကန်ထဲသို့ ထည့်ပါ။
 ၅။ ကြက်ကြော်အချဉ်ရည် (S02) ၁ ခွက်ငယ်ကို ကြက်ဆီထမင်း၊ ဟင်းရည်ပူပူတို့နှင့်အတူ တွဲဖက်တည်ခင်းဧည့်ခံပါ။') where code = 'CR02';
+insert into public.recipe_lines (menu_id, item_id, qty) select m.id, '17c08134-cc79-45f8-8e10-743e4ede44fb', 0.1 from public.menus m where m.code = 'CR02' and exists (select 1 from public.items where id = '17c08134-cc79-45f8-8e10-743e4ede44fb') on conflict do nothing;
 insert into public.menus (code, kind, name_th, name_en, name_my, ingredients_th, ingredients_en, ingredients_my, steps_th, steps_en, steps_my, min_portions, active)
-select 'CR03', 'dish', 'ข้าวมันไก่ผสม', 'Mixed Chicken Rice', 'ကြက်သားရောစပ် ဆီထမင်း', 'ไก่ต้ม (C01) ½ ชิ้น
-ไก่ทอด (C02) ½ ชิ้น
+select 'CR03', 'dish', 'ข้าวมันไก่ผสม', 'Mixed Chicken Rice', 'ကြက်သားရောစပ် ဆီထမင်း', 'ไก่ต้ม (C01) 100 ก.
+ไก่ทอด (C02) 100 ก.
 ข้าวมัน (R02) 1 ถ้วย
 น้ำจิ้มข้าวมันไก่ (S01) 1 ถ้วยเล็ก
 น้ำจิ้มไก่ (S02) 1 ถ้วยเล็ก
 สต๊อกไก่ (ST01) 1 ถ้วย
 ผักชี
-แตงกวา 3–4 ชิ้น', 'Boiled chicken (C01) ½ pc
-Fried chicken (C02) ½ pc
+แตงกวา 3–4 ชิ้น', 'Boiled chicken (C01) 100 g
+Fried chicken (C02) 100 g
 Chicken rice (R02) 1 cup
 Chicken rice sauce (S01) 1 small cup
 Sweet chicken sauce (S02) 1 small cup
 Chicken stock (ST01) 1 cup
 Coriander
-Cucumber 3–4 pcs', 'ကြက်ပြုတ် (C01) ½ တုံး
-ကြက်ကြော် (C02) ½ တုံး
+Cucumber 3–4 pcs', 'ကြက်ပြုတ် (C01) 100 ဂရမ်
+ကြက်ကြော် (C02) 100 ဂရမ်
 ကြက်ဆီထမင်း (R02) 1 ခွက်
 ကြက်သားထမင်းဆော့စ် (S01) 1 ခွက်ငယ်
 ကြက်ကြော်အချဉ်ရည် (S02) 1 ခွက်ငယ်
@@ -751,8 +753,8 @@ Cucumber 3–4 pcs', 'ကြက်ပြုတ် (C01) ½ တုံး
 ၄။ ကြက်ပြုတ်ရည် (ST01) ၁ ခွက်ကို ပူအောင်နွှေးပြီး ဟင်းရည်ပန်းကန်ထဲသို့ ထည့်ပါ။
 ၅။ ကြက်သားထမင်းဆော့စ် (S01) ၁ ခွက်ငယ်၊ ကြက်ကြော်အချဉ်ရည် (S02) ၁ ခွက်ငယ်တို့နှင့်အတူ ကြက်ဆီထမင်း၊ ဟင်းရည်ပူပူတို့ကို တွဲဖက်တည်ခင်းဧည့်ခံပါ။', 1, true
 where not exists (select 1 from public.menus where code = 'CR03');
-update public.menus set name_my = coalesce(name_my, 'ကြက်သားရောစပ် ဆီထမင်း'), ingredients_my = coalesce(ingredients_my, 'ကြက်ပြုတ် (C01) ½ တုံး
-ကြက်ကြော် (C02) ½ တုံး
+update public.menus set name_my = coalesce(name_my, 'ကြက်သားရောစပ် ဆီထမင်း'), ingredients_my = coalesce(ingredients_my, 'ကြက်ပြုတ် (C01) 100 ဂရမ်
+ကြက်ကြော် (C02) 100 ဂရမ်
 ကြက်ဆီထမင်း (R02) 1 ခွက်
 ကြက်သားထမင်းဆော့စ် (S01) 1 ခွက်ငယ်
 ကြက်ကြော်အချဉ်ရည် (S02) 1 ခွက်ငယ်
@@ -763,6 +765,7 @@ update public.menus set name_my = coalesce(name_my, 'ကြက်သားရေ
 ၃။ သခွားသီး (၃-၄ စိတ်) ကို ပန်းကန်ဘေးတွင် တင်ပြီး ကြက်သားပေါ်တွင် နံနံပင်ဖြင့် အလှဆင်ပါ။
 ၄။ ကြက်ပြုတ်ရည် (ST01) ၁ ခွက်ကို ပူအောင်နွှေးပြီး ဟင်းရည်ပန်းကန်ထဲသို့ ထည့်ပါ။
 ၅။ ကြက်သားထမင်းဆော့စ် (S01) ၁ ခွက်ငယ်၊ ကြက်ကြော်အချဉ်ရည် (S02) ၁ ခွက်ငယ်တို့နှင့်အတူ ကြက်ဆီထမင်း၊ ဟင်းရည်ပူပူတို့ကို တွဲဖက်တည်ခင်းဧည့်ခံပါ။') where code = 'CR03';
+insert into public.recipe_lines (menu_id, item_id, qty) select m.id, '17c08134-cc79-45f8-8e10-743e4ede44fb', 0.1 from public.menus m where m.code = 'CR03' and exists (select 1 from public.items where id = '17c08134-cc79-45f8-8e10-743e4ede44fb') on conflict do nothing;
 insert into public.menus (code, kind, name_th, name_en, name_my, ingredients_th, ingredients_en, ingredients_my, steps_th, steps_en, steps_my, min_portions, active)
 select 'M01', 'dish', 'ข้าวผัดกะเพราเนื้อ + ไข่ดาว', 'Beef Basil Rice with Fried Egg', 'အမဲသား ပဒေါင်းကြော် ထမင်းနှင့် ကြက်ဥကြော်', 'เนื้อวัว (B01) 100 ก. (1 ถุง)
 กระเทียมบด/สับ 1 ช้อนชา
@@ -960,27 +963,7 @@ update public.menus set name_my = coalesce(name_my, 'ကြက်ကြော်
 insert into public.recipe_lines (menu_id, item_id, qty) select m.id, 'edfdbfa3-5446-4e66-b7be-0c484db852ff', 1 from public.menus m where m.code = 'M04' and exists (select 1 from public.items where id = 'edfdbfa3-5446-4e66-b7be-0c484db852ff') on conflict do nothing;
 insert into public.recipe_lines (menu_id, item_id, qty) select m.id, '12207b3d-763c-42d4-9fd4-de591e6783c8', 1 from public.menus m where m.code = 'M04' and exists (select 1 from public.items where id = '12207b3d-763c-42d4-9fd4-de591e6783c8') on conflict do nothing;
 insert into public.menus (code, kind, name_th, name_en, name_my, ingredients_th, ingredients_en, ingredients_my, steps_th, steps_en, steps_my, min_portions, active)
-select 'A01', 'dish', 'อโรมาติกไก่ (ทานเล่น)', 'Aromatic Chicken (Appetizer)', 'အမွှေးနံ့သာ ကြက်သား (အမြည်း)', 'ไก่ต้ม (C01) 1 ชิ้น
-พริกกระเทียมจีน (น้ำมันพริกกระเทียม) ตามชอบ
-ผักชี 1 ใบ', 'Boiled chicken (C01) 1 piece
-Chinese chili garlic oil as needed
-Coriander 1 leaf', 'ကြက်ပြုတ် (C01) 1 တုံး
-တရုတ် ငရုတ်သီး ကြက်သွန်ဖြူဆီ လိုသလောက်
-နံနံပင် 1 ရွက်', '1. หั่นไก่ต้มเป็นชิ้นพอดีคำ จัดเรียงใส่จาน
-2. ราดพริกกระเทียมจีนบนไก่
-3. ท็อปด้วยผักชี 1 ใบ', '1. Slice the boiled chicken into bite-sized pieces and arrange on a plate.
-2. Drizzle Chinese chili garlic oil over the chicken.
-3. Top with 1 coriander leaf.', '၁။ ကြက်ပြုတ်ကို အလွယ်တကူ စားနိုင်သော အတုံးငယ်များ လှီးပြီး ပန်းကန်ထဲတွင် လှပစွာ စီတင်ပါ။
-၂။ တရုတ် ငရုတ်သီး ကြက်သွန်ဖြူဆီကို ကြက်သားပေါ်သို့ ဆမ်းပေးပါ။
-၃။ အပေါ်မှ နံနံပင် ၁ ရွက် တင်၍ အလှဆင် တည်ခင်းဧည့်ခံပါ။', 1, true
-where not exists (select 1 from public.menus where code = 'A01');
-update public.menus set name_my = coalesce(name_my, 'အမွှေးနံ့သာ ကြက်သား (အမြည်း)'), ingredients_my = coalesce(ingredients_my, 'ကြက်ပြုတ် (C01) 1 တုံး
-တရုတ် ငရုတ်သီး ကြက်သွန်ဖြူဆီ လိုသလောက်
-နံနံပင် 1 ရွက်'), steps_my = coalesce(steps_my, '၁။ ကြက်ပြုတ်ကို အလွယ်တကူ စားနိုင်သော အတုံးငယ်များ လှီးပြီး ပန်းကန်ထဲတွင် လှပစွာ စီတင်ပါ။
-၂။ တရုတ် ငရုတ်သီး ကြက်သွန်ဖြူဆီကို ကြက်သားပေါ်သို့ ဆမ်းပေးပါ။
-၃။ အပေါ်မှ နံနံပင် ၁ ရွက် တင်၍ အလှဆင် တည်ခင်းဧည့်ခံပါ။') where code = 'A01';
-insert into public.menus (code, kind, name_th, name_en, name_my, ingredients_th, ingredients_en, ingredients_my, steps_th, steps_en, steps_my, min_portions, active)
-select 'A02', 'dish', 'อโรมาติกเนื้อ (ทานเล่น)', 'Aromatic Beef (Appetizer)', 'အမွှေးနံ့သာ အမဲသား (အမြည်း)', 'เนื้อแช่ 1 ชิ้นใหญ่ (สไลซ์บาง 15 ชิ้น)
+select 'A02', 'dish', 'บีฟทาทากิ', 'Beef Tataki', 'အမဲသား တာတာကီ (Beef Tataki)', 'เนื้อแช่ 1 ชิ้นใหญ่ (สไลซ์บาง 15 ชิ้น)
 หอมหัวใหญ่ซอย ตามชอบ
 ซอสหมัก 100 ก.
 ต้นหอมหมักน้ำมันงา สำหรับท็อปปิ้ง', 'Chilled/frozen beef 1 large piece (15 thin slices)
@@ -1006,7 +989,7 @@ Sesame-oil marinated spring onion for garnish', 'အေးခဲ/အအေးခ
 ၅။ လှီးထားသော အမဲသား ၁၅ ဖတ်ကို ကြက်သွန်နီအပေါ်တွင် အစီအရီ တင်ပါ။
 ၆။ နှမ်းဆီနှပ် ကြက်သွန်မြိတ်ကို အမဲသားအပေါ်တွင် စက်ဝိုင်းပုံစံ လှပစွာ တင်၍ တည်ခင်းဧည့်ခံပါ။', 1, true
 where not exists (select 1 from public.menus where code = 'A02');
-update public.menus set name_my = coalesce(name_my, 'အမွှေးနံ့သာ အမဲသား (အမြည်း)'), ingredients_my = coalesce(ingredients_my, 'အေးခဲ/အအေးခံထားသော အမဲသား 1 တုံးကြီး (ပါးပါးလှီး 15 ဖတ်)
+update public.menus set name_my = coalesce(name_my, 'အမဲသား တာတာကီ (Beef Tataki)'), ingredients_my = coalesce(ingredients_my, 'အေးခဲ/အအေးခံထားသော အမဲသား 1 တုံးကြီး (ပါးပါးလှီး 15 ဖတ်)
 ကြက်သွန်နီ (ပါးပါးလှီး) လိုသလောက်
 နှပ်ဆော့စ် 100 ဂရမ်
 နှမ်းဆီနှပ် ကြက်သွန်မြိတ် အလှဆင်ရန်'), steps_my = coalesce(steps_my, '၁။ အမဲသားကို စက်ဖြင့် အပြားပါးပါး ၁၅ ဖတ် ရအောင် လှီးဖြတ်ပါ။
