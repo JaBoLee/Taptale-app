@@ -572,7 +572,15 @@
     "l_settings": "Settings",
     "integrations": "Still to connect: Google Drive/Sheet (07:00 backup, to-order tab), LINE OA (alerts), AI receipt/slip reading",
     "kpi_sales": "Bills today",
-    "only_owner": "Owners only"
+    "only_owner": "Owners only",
+    "sales_range": "Bills for selected dates",
+    "sales_meta": "{{n}} shift close(s) · {{b}} bills",
+    "from": "From",
+    "to": "To",
+    "r_today": "Today",
+    "r_yesterday": "Yesterday",
+    "r_d7": "7 days",
+    "r_month": "This month"
   },
   "tr": {
     "hint": "Type Thai — English/Burmese are filled in automatically (editable)",

@@ -13,9 +13,31 @@ export default function OwnerHome() {
   const { t } = useTranslation()
   const [issues, setIssues] = useState<Issue[]>([])
   const [inside, setInside] = useState<{ name: string; at: string }[]>([])
-  const [counts, setCounts] = useState({ receipts: 0, leaves: 0, pending: 0, closes: 0, sales: 0 })
+  const [counts, setCounts] = useState({ receipts: 0, leaves: 0, pending: 0 })
   const [names, setNames] = useState<Record<string, string>>({})
   const [fixes, setFixes] = useState<PayFix[]>([])
+  const [range, setRange] = useState(() => ({ from: ymd(), to: ymd() }))
+  const [sales, setSales] = useState<{ total: number; closes: number; bills: number } | null>(null)
+
+  useEffect(() => {
+    const from = range.from <= range.to ? range.from : range.to
+    const to = range.from <= range.to ? range.to : range.from
+    setSales(null)
+    sb.from('shift_closes').select('bill_total, bill_count').gte('work_date', from).lte('work_date', to).then(({ data }) => {
+      const rows = (data as { bill_total: number | null; bill_count: number | null }[]) ?? []
+      setSales({ total: rows.reduce((a, c) => a + (Number(c.bill_total) || 0), 0), closes: rows.length,
+        bills: rows.reduce((a, c) => a + (Number(c.bill_count) || 0), 0) })
+    })
+  }, [range])
+
+  const today = ymd()
+  const monthStart = today.slice(0, 8) + '01'
+  const presets = [
+    { k: 'today', from: today, to: today },
+    { k: 'yesterday', from: addDays(today, -1), to: addDays(today, -1) },
+    { k: 'd7', from: addDays(today, -6), to: today },
+    { k: 'month', from: monthStart, to: today },
+  ]
 
   useEffect(() => {
     (async () => {
@@ -46,8 +68,7 @@ export default function OwnerHome() {
       const last: Record<string, { kind: string; at: string }> = {}
       for (const a of (att as { profile_id: string; kind: string; at: string }[]) ?? []) last[a.profile_id] = a
       setInside(Object.entries(last).filter(([, v]) => v.kind === 'in').map(([id, v]) => ({ name: nm[id] ?? '–', at: v.at })))
-      const today = C.filter((c) => c.work_date === ymd())
-      setCounts({ receipts: r.count ?? 0, leaves: l.count ?? 0, pending: p.count ?? 0, closes: today.length, sales: today.reduce((s2, c) => s2 + (Number(c.bill_total) || 0), 0) })
+      setCounts({ receipts: r.count ?? 0, leaves: l.count ?? 0, pending: p.count ?? 0 })
     })()
   }, [])
 
@@ -61,12 +82,25 @@ export default function OwnerHome() {
   return (
     <Page title={t('owner.title')}>
       <div className="grid grid-cols-2 gap-2.5">
-        <div className="flex flex-col gap-1 rounded-[18px] bg-ink p-3.5 text-white">
-          <span className="text-xs text-herosub">{t('owner.kpi_sales')}</span>
-          <span className="text-[22px] font-bold text-amber">{fmtMoney(counts.sales)}</span>
-          <span className="text-xs text-herosub">{t('owner.today_closes', { n: counts.closes })}</span>
+        <div className="col-span-2 flex flex-col gap-2 rounded-[18px] bg-ink p-3.5 text-white">
+          <span className="text-xs text-herosub">{range.from === today && range.to === today ? t('owner.kpi_sales') : t('owner.sales_range')}</span>
+          <span className="text-[26px] font-bold text-amber">{sales ? fmtMoney(sales.total) : '…'}</span>
+          <span className="text-xs text-herosub">{t('owner.sales_meta', { n: sales?.closes ?? 0, b: sales?.bills ?? 0 })}</span>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="flex flex-col gap-1 text-xs text-herosub">{t('owner.from')}
+              <input type="date" className="h-11 rounded-xl bg-paper px-2.5 text-sm font-semibold text-ink" value={range.from} max={today} onChange={(e) => e.target.value && setRange({ ...range, from: e.target.value })} /></label>
+            <label className="flex flex-col gap-1 text-xs text-herosub">{t('owner.to')}
+              <input type="date" className="h-11 rounded-xl bg-paper px-2.5 text-sm font-semibold text-ink" value={range.to} max={today} onChange={(e) => e.target.value && setRange({ ...range, to: e.target.value })} /></label>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {presets.map((p) => {
+              const on = range.from === p.from && range.to === p.to
+              return <button key={p.k} type="button" aria-pressed={on} onClick={() => setRange({ from: p.from, to: p.to })}
+                className={`min-h-11 rounded-xl px-3 text-xs font-semibold ${on ? 'bg-amber text-ink' : 'bg-white/10 text-white'}`}>{t(`owner.r_${p.k}`)}</button>
+            })}
+          </div>
         </div>
-        <div className="flex flex-col gap-1 rounded-[18px] bg-tealbg p-3.5 text-tealink">
+        <div className="col-span-2 flex flex-col gap-1 rounded-[18px] bg-tealbg p-3.5 text-tealink">
           <span className="text-xs">{t('owner.inside')}</span>
           <span className="text-[22px] font-bold">{inside.length}</span>
           <span className="truncate text-xs">{inside.map((x) => x.name).join(', ') || t('owner.nobody')}</span>
