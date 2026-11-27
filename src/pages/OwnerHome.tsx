@@ -18,12 +18,12 @@ export default function OwnerHome() {
   const [fixes, setFixes] = useState<PayFix[]>([])
   const [range, setRange] = useState(() => ({ from: ymd(), to: ymd() }))
   const [sales, setSales] = useState<{ total: number; closes: number; bills: number } | null>(null)
-  const [review, setReview] = useState<{ id: string; note: string } | null>(null)
+  const [review, setReview] = useState<{ id: string; note: string; err?: boolean } | null>(null)
   const markReviewed = async () => {
     if (!review) return
     const { data: u } = await sb.auth.getUser()
     const { error } = await sb.from('shift_closes').update({ cash_reviewed_at: new Date().toISOString(), cash_reviewed_by: u.user?.id ?? null, cash_review_note: review.note.trim() || null }).eq('id', review.id)
-    if (!error) { setIssues((xs) => xs.filter((x) => x.cur.id !== review.id)); setReview(null) }
+    if (!error) { setIssues((xs) => xs.filter((x) => x.cur.id !== review.id)); setReview(null) } else setReview({ ...review, err: true })
   }
 
   useEffect(() => {
@@ -133,6 +133,7 @@ export default function OwnerHome() {
               {review?.id === x.cur.id ? (
                 <div className="mt-1 flex flex-col gap-1.5">
                   <input className="h-11 rounded-xl border-[1.5px] border-edge bg-white px-3 text-sm" placeholder={t('owner.cash_review_note')} value={review.note} onChange={(e) => setReview({ ...review, note: e.target.value })} />
+                  {review.err && <span className="text-xs font-semibold text-bad">{t('common.save_failed')}</span>}
                   <div className="grid grid-cols-2 gap-1.5">
                     <button type="button" className="min-h-11 rounded-xl border-[1.5px] border-edge bg-white text-sm font-semibold" onClick={() => setReview(null)}>{t('common.cancel')}</button>
                     <button type="button" className="min-h-11 rounded-xl bg-ink text-sm font-semibold text-white" onClick={markReviewed}>{t('owner.cash_review_ok')}</button>
