@@ -13,10 +13,11 @@ export interface Keg {
 }
 export interface Reading { id: string; keg_id: string; counter: number; created_at: string; created_by: string }
 
-/** แก้วที่ขายได้ต่อถัง: ใช้ค่าที่ตั้งไว้ของถัง ถ้าไม่มีใช้ 3.75 แก้ว/ลิตร (ถัง 20 ล. ≈ 75 แก้ว ตามที่ร้านขายได้จริง) */
+/** แก้วที่ขายได้ต่อถัง: ใช้ค่าที่ตั้งไว้ของถัง ถ้าไม่มีคิดจาก 3.75 แก้ว/ลิตร สำหรับแก้ว 250 ml (ถัง 20 ล. ≈ 75 แก้ว ตามที่ร้านขายได้จริง)
+ *  แก้วใหญ่กว่า → แก้วน้อยลงตามสัดส่วน เช่น แก้ว 500 ml ถัง 20 ล. ≈ 38 แก้ว */
 export const GLASSES_PER_L = 3.75
-export const defaultGlasses = (sizeL: number) => Math.round(Number(sizeL) * GLASSES_PER_L)
-export const expectedGlasses = (k: Keg) => (k.expected_glasses && k.expected_glasses > 0 ? k.expected_glasses : defaultGlasses(k.size_l))
+export const defaultGlasses = (sizeL: number, glassMl = 250) => Math.round(Number(sizeL) * GLASSES_PER_L * 250 / (Number(glassMl) || 250))
+export const expectedGlasses = (k: Keg) => (k.expected_glasses && k.expected_glasses > 0 ? k.expected_glasses : defaultGlasses(k.size_l, k.glass_ml))
 
 /** วันที่ที่เลือก → timestamp: วันนี้ = ตอนนี้, วันอื่น = เที่ยงวันของวันนั้น (เวลาไทย) */
 const dayTime = (date: string) => (date === ymd() ? new Date().toISOString() : new Date(`${date}T12:00:00+07:00`).toISOString())
@@ -198,7 +199,13 @@ export default function Kegs() {
   const load = useCallback(async () => setState(await loadKegs()), [])
   useEffect(() => {
     load()
-    loadSettings().then((s) => { if (Array.isArray(s.glass_sizes_ml) && s.glass_sizes_ml.length) setGlasses(s.glass_sizes_ml) })
+    loadSettings().then((s) => {
+      if (Array.isArray(s.glass_sizes_ml) && s.glass_sizes_ml.length) {
+        const gs = s.glass_sizes_ml as number[]
+        setGlasses(gs)
+        setNk((v) => (gs.map(String).includes(v.glass_ml) ? v : { ...v, glass_ml: String(gs[0]) }))
+      }
+    })
   }, [load])
 
   if (!state) return <Page title={t('kegs.title')}><Loading /></Page>
@@ -233,7 +240,7 @@ export default function Kegs() {
     setBusy(true)
     const row = { beer_name: nk.beer_name.trim(), brand: nk.brand.trim(), keg_type: nk.keg_type, size_l: Number(nk.size_l),
       glass_ml: Number(nk.glass_ml) || 250, cost: nk.cost ? Number(nk.cost) : null, status: 'stock', received_at: dayTime(nk.received) }
-    const glasses = Number(nk.glasses) || defaultGlasses(Number(nk.size_l))
+    const glasses = Number(nk.glasses) || defaultGlasses(Number(nk.size_l), Number(nk.glass_ml))
     let { error } = await sb.from('kegs').insert({ ...row, expected_glasses: glasses })
     // ก่อนรัน migration 0007 ยังไม่มีคอลัมน์ expected_glasses → บันทึกโดยไม่มีค่านี้ (ระบบใช้ 3.75 แก้ว/ลิตรแทน)
     if (error && /expected_glasses/.test(error.message)) ({ error } = await sb.from('kegs').insert(row))
@@ -310,7 +317,7 @@ export default function Kegs() {
             </div>
             <div className="grid grid-cols-2 gap-2.5">
               <Field label={t('kegs.received_date')}><input type="date" className={inputCls} max={ymd()} value={nk.received} onChange={(e) => setNk({ ...nk, received: e.target.value || ymd() })} /></Field>
-              <Field label={t('kegs.glasses_per_keg')}><input className={inputCls} inputMode="numeric" placeholder={String(defaultGlasses(Number(nk.size_l) || 0))} value={nk.glasses} onChange={(e) => setNk({ ...nk, glasses: e.target.value })} /></Field>
+              <Field label={t('kegs.glasses_per_keg')}><input className={inputCls} inputMode="numeric" placeholder={String(defaultGlasses(Number(nk.size_l) || 0, Number(nk.glass_ml)))} value={nk.glasses} onChange={(e) => setNk({ ...nk, glasses: e.target.value })} /></Field>
             </div>
             {profile?.role === 'owner' && <Field label={t('kegs.cost')}><input className={inputCls} inputMode="decimal" value={nk.cost} onChange={(e) => setNk({ ...nk, cost: e.target.value })} /></Field>}
             <div className="grid grid-cols-2 gap-2">
