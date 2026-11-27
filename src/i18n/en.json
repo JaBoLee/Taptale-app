@@ -449,7 +449,15 @@
     "moves_total": "Net today",
     "add_first": "Add an item",
     "add_another": "Add another item",
-    "need_note": "“Other” needs a note"
+    "need_note": "“Other” needs a note",
+    "r_safekeep": "Owner safekeeping",
+    "need_who": "Enter who took the cash",
+    "who": "Taken by",
+    "who_ph": "e.g. Boss / bank deposit",
+    "hint_expense": "Recorded automatically as a cash expense",
+    "hint_change": "Change – not recorded in the accounts",
+    "hint_safekeep": "Moving cash for safekeeping – not an expense",
+    "hint_in": "Adding cash to the drawer, e.g. change – not recorded in the accounts"
   },
   "receipt": {
     "title": "Receipt photo",
@@ -509,7 +517,24 @@
     "s_receipt": "Receipt",
     "s_manual": "Manual",
     "s_pos": "POS",
-    "s_keg_sale": "Keg sale"
+    "s_keg_sale": "Keg sale",
+    "cash": "Cash",
+    "s_cash_drawer": "Drawer",
+    "channel": "Paid by",
+    "ch_cash": "Cash",
+    "ch_transfer": "Transfer/card",
+    "ch_in_cash": "Cash received",
+    "ch_in_transfer": "Transfer/card received",
+    "cash_sales": "Cash sales",
+    "cash_spent": "Cash spent",
+    "cash_kept": "Taken for safekeeping",
+    "cash_float": "Change added (net)",
+    "cash_drawer_now": "Drawer cash (last close)",
+    "cash_hint": "Cash sales per shift = cash at end − cash at start + cash taken out − cash put in · used to check cash; not added again on top of POS sales",
+    "cash_days": "By day",
+    "cash_kept_list": "Safekeeping",
+    "cash_spent_list": "Cash expenses",
+    "cash_day_row": "Sales {{s}} · spent {{e}} · kept {{k}}"
   },
   "pay": {
     "title": "Payroll",
@@ -583,7 +608,10 @@
     "r_today": "Today",
     "r_yesterday": "Yesterday",
     "r_d7": "7 days",
-    "r_month": "This month"
+    "r_month": "This month",
+    "cash_review": "Checked",
+    "cash_review_note": "Note (optional), e.g. owner added change",
+    "cash_review_ok": "Confirm · hide this item"
   },
   "tr": {
     "hint": "Type Thai — English/Burmese are filled in automatically (editable)",

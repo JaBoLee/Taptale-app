@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { sb, ymd, addDays, fmtMoney, fmtDateTime, fmtTime, loadSettings, loadMembers } from '../lib/db'
 import { Card, Page, Pill, Row } from '../components/ui'
 
-interface Close { id: string; profile_id: string; work_date: string; shift_code: string | null; bill_count: number | null; bill_total: number | null; cash_open: number; cash_close: number; closed_at: string }
+interface Close { id: string; profile_id: string; work_date: string; shift_code: string | null; bill_count: number | null; bill_total: number | null; cash_open: number; cash_close: number; closed_at: string; cash_reviewed_at?: string | null }
 interface Move { direction: 'in' | 'out'; amount: number; reason: string; created_at: string }
 interface Issue { cur: Close; prev: Close; diff: number; moves: Move[] }
 interface PayFix { id: string; work_date: string; shift_code: string | null; bill_no: string | null; amount: number; recorded_as: string; actual: string; note: string | null; created_by: string; created_at: string }
@@ -18,6 +18,13 @@ export default function OwnerHome() {
   const [fixes, setFixes] = useState<PayFix[]>([])
   const [range, setRange] = useState(() => ({ from: ymd(), to: ymd() }))
   const [sales, setSales] = useState<{ total: number; closes: number; bills: number } | null>(null)
+  const [review, setReview] = useState<{ id: string; note: string } | null>(null)
+  const markReviewed = async () => {
+    if (!review) return
+    const { data: u } = await sb.auth.getUser()
+    const { error } = await sb.from('shift_closes').update({ cash_reviewed_at: new Date().toISOString(), cash_reviewed_by: u.user?.id ?? null, cash_review_note: review.note.trim() || null }).eq('id', review.id)
+    if (!error) { setIssues((xs) => xs.filter((x) => x.cur.id !== review.id)); setReview(null) }
+  }
 
   useEffect(() => {
     const from = range.from <= range.to ? range.from : range.to
@@ -62,7 +69,7 @@ export default function OwnerHome() {
       const iss: Issue[] = []
       for (let i = 1; i < C.length; i++) {
         const diff = C[i].cash_open - C[i - 1].cash_close
-        if (Math.abs(diff) > tol) iss.push({ cur: C[i], prev: C[i - 1], diff, moves: M.filter((m) => m.created_at > C[i - 1].closed_at && m.created_at <= C[i].closed_at) })
+        if (Math.abs(diff) > tol && !C[i].cash_reviewed_at) iss.push({ cur: C[i], prev: C[i - 1], diff, moves: M.filter((m) => m.created_at > C[i - 1].closed_at && m.created_at <= C[i].closed_at) })
       }
       setIssues(iss.reverse())
       const last: Record<string, { kind: string; at: string }> = {}
@@ -123,6 +130,17 @@ export default function OwnerHome() {
               <Row><span>{t('owner.cash_line', { prev: names[x.prev.profile_id] ?? '–', cur: names[x.cur.profile_id] ?? '–' })}</span><b className="text-bad">{x.diff > 0 ? '+' : ''}{fmtMoney(x.diff)}</b></Row>
               <span className="text-xs text-muted">{t('owner.cash_detail', { close: fmtMoney(x.prev.cash_close), open: fmtMoney(x.cur.cash_open), when: fmtDateTime(x.cur.closed_at) })}</span>
               {x.moves.length > 0 && <span className="text-xs text-muted">{t('owner.cash_moves', { list: x.moves.map((m) => `${m.direction === 'out' ? '−' : '+'}${fmtMoney(m.amount)}`).join(', ') })}</span>}
+              {review?.id === x.cur.id ? (
+                <div className="mt-1 flex flex-col gap-1.5">
+                  <input className="h-11 rounded-xl border-[1.5px] border-edge bg-white px-3 text-sm" placeholder={t('owner.cash_review_note')} value={review.note} onChange={(e) => setReview({ ...review, note: e.target.value })} />
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button type="button" className="min-h-11 rounded-xl border-[1.5px] border-edge bg-white text-sm font-semibold" onClick={() => setReview(null)}>{t('common.cancel')}</button>
+                    <button type="button" className="min-h-11 rounded-xl bg-ink text-sm font-semibold text-white" onClick={markReviewed}>{t('owner.cash_review_ok')}</button>
+                  </div>
+                </div>
+              ) : (
+                <button type="button" className="mt-1 min-h-11 self-start rounded-xl border-[1.5px] border-badline bg-white px-4 text-sm font-semibold text-bad" onClick={() => setReview({ id: x.cur.id, note: '' })}>✓ {t('owner.cash_review')}</button>
+              )}
             </div>
           ))}
         </Card>

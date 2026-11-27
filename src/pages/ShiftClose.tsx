@@ -4,7 +4,8 @@ import { useAuth } from '../lib/auth'
 import { sb, ymd, uploadPhoto, fmtMoney, fmtTime, loadShiftTypes, type ShiftType } from '../lib/db'
 import { Button, Card, Field, Msg, Page, Pill, Row, Seg, inputCls } from '../components/ui'
 
-const REASONS = ['change', 'fresh_food', 'delivery', 'other'] as const
+const REASONS_OUT = ['change', 'fresh_food', 'delivery', 'safekeep', 'other'] as const
+const REASONS_IN = ['change', 'other'] as const
 const PAYS = ['cash', 'qr', 'card'] as const
 type Pay = typeof PAYS[number]
 interface Fix { bill_no: string; amount: number; recorded_as: Pay; actual: Pay; note: string }
@@ -102,6 +103,7 @@ export default function ShiftClose() {
   const addMove = async () => {
     if (!Number(m.amount)) { setMsg2({ ok: false, text: t('close.need_amount') }); return }
     if (m.reason === 'other' && !m.note.trim()) { setMsg2({ ok: false, text: t('close.need_note') }); return }
+    if (m.reason === 'safekeep' && !m.note.trim()) { setMsg2({ ok: false, text: t('close.need_who') }); return }
     setBusy(true)
     try {
       let receiptId: string | null = null
@@ -201,18 +203,19 @@ export default function ShiftClose() {
         )}
         <div className="flex flex-col gap-2.5 rounded-2xl border-[1.5px] border-dashed border-edge p-3">
           <span className="text-[13px] font-semibold">{moves.length ? t('close.add_another') : t('close.add_first')}</span>
-          <Seg label={t('close.direction')} value={m.direction} onChange={(v) => setM({ ...m, direction: v })}
+          <Seg label={t('close.direction')} value={m.direction} onChange={(v) => setM({ ...m, direction: v, reason: v === 'in' ? 'change' : m.reason })}
             options={[{ value: 'out', label: t('close.out') }, { value: 'in', label: t('close.in') }]} />
           <div className="flex flex-wrap gap-2">
-            {REASONS.map((r) => (
+            {(m.direction === 'in' ? REASONS_IN : REASONS_OUT).map((r) => (
               <button key={r} type="button" aria-pressed={m.reason === r} onClick={() => setM({ ...m, reason: r })}
                 className={`min-h-11 rounded-full border-[1.5px] px-4 text-[13px] font-semibold ${m.reason === r ? 'border-ink bg-ink text-white' : 'border-edge bg-white text-ink'}`}>{t(`close.r_${r}`)}</button>
             ))}
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Field label={t('common.amount')}><input className={inputCls} inputMode="decimal" value={m.amount} onChange={(e) => setM({ ...m, amount: e.target.value })} /></Field>
-            <Field label={t('common.note')}><input className={inputCls} value={m.note} onChange={(e) => setM({ ...m, note: e.target.value })} /></Field>
+            <Field label={m.reason === 'safekeep' ? t('close.who') : t('common.note')}><input className={inputCls} value={m.note} placeholder={m.reason === 'safekeep' ? t('close.who_ph') : undefined} onChange={(e) => setM({ ...m, note: e.target.value })} /></Field>
           </div>
+          <span className="text-xs text-muted">{t(m.direction === 'in' ? 'close.hint_in' : m.reason === 'safekeep' ? 'close.hint_safekeep' : m.reason === 'change' ? 'close.hint_change' : 'close.hint_expense')}</span>
           <Field label={t('close.attach_receipt')}><input key={moves.length} type="file" accept="image/*" capture="environment" className="text-sm" onChange={(e) => setMFile(e.target.files?.[0] ?? null)} /></Field>
           <Msg msg={msg2} />
           <Button disabled={busy} onClick={addMove} className="!border-teal !text-tealink">+ {t('close.save_move')}</Button>
