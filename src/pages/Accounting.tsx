@@ -47,6 +47,25 @@ function ReceiptReview({ r, owners, onDone }: { r: Rcpt; owners: Member[]; onDon
     channel: 'transfer' as 'cash' | 'transfer' | 'owner_cash', holder: '' })
   const [lines, setLines] = useState<Line[]>([])
   const [linked, setLinked] = useState<{ id: string; cash_movement_id: string | null } | null | undefined>(undefined)
+  const [cands, setCands] = useState<{ id: string; cash_movement_id: string | null; amount: number; entry_date: string; description: string | null; category: string | null }[]>([])
+  useEffect(() => {
+    // กันลงซ้ำ: ใบเสร็จที่ถ่ายแยก แต่ซื้อด้วยเงินสดจากลิ้นชักที่บันทึกตอนนำเงินออกไปแล้ว
+    const d = r.created_at.slice(0, 10)
+    sb.from('ledger').select('id, cash_movement_id, amount, entry_date, description, category').eq('source', 'cash_drawer').is('receipt_id', null)
+      .gte('entry_date', addDays(d, -2)).lte('entry_date', addDays(d, 1)).order('entry_date', { ascending: false })
+      .then(({ data }) => setCands(((data as typeof cands) ?? []).map((c) => ({ ...c, amount: Number(c.amount) }))))
+  }, [r.created_at])
+  const linkTo = async (id: string) => {
+    const c = cands.find((x) => x.id === id)
+    if (!c) { setLinked(null); setLines([]); return }
+    setLinked({ id: c.id, cash_movement_id: c.cash_movement_id })
+    setF((v) => ({ ...v, amount: String(c.amount), category: c.category ?? v.category }))
+    if (c.cash_movement_id) {
+      const { data: ls } = await sb.from('ledger_lines').select('*').eq('cash_movement_id', c.cash_movement_id).order('sort')
+      setLines(ls && ls.length ? fromRows(ls as LineRow[]) : [])
+    }
+  }
+  const [picked, setPicked] = useState('')
   useEffect(() => {
     // ใบเสร็จที่แนบมากับ "นำเงินออกจากลิ้นชัก": มีรายการบัญชีเงินสด + รายการสินค้าที่พนักงานกรอกไว้แล้ว
     sb.from('ledger').select('id, cash_movement_id, amount').eq('receipt_id', r.id).limit(1).then(async ({ data }) => {
@@ -79,6 +98,7 @@ function ReceiptReview({ r, owners, onDone }: { r: Rcpt; owners: Member[]; onDon
         holder_id: f.channel === 'owner_cash' ? f.holder : null }).select('id').single()
       error = res.error; id = (res.data as { id: string } | null)?.id ?? null
     }
+    if (!error && id && picked) await sb.from('ledger').update({ receipt_id: r.id }).eq('id', id)
     if (!error && id) error = await saveLedgerLines(id, lines, linked?.cash_movement_id)
     if (!error) await sb.from('receipts').update({ status: 'posted', ocr: { vendor: f.vendor, amount, vat: f.vat ? Number(f.vat) : null } }).eq('id', r.id)
     setBusy(false); onDone()
@@ -104,6 +124,14 @@ function ReceiptReview({ r, owners, onDone }: { r: Rcpt; owners: Member[]; onDon
           {CATS.map((c) => <option key={c} value={c}>{t(`acct.c_${c}`)}</option>)}
         </select>
       </Field>
+      {cands.length > 0 && (linked === null || picked) && (
+        <Field label={t('acct.dup_q')}>
+          <select className={inputCls} value={picked} onChange={(e) => { setPicked(e.target.value); linkTo(e.target.value) }}>
+            <option value="">{t('acct.dup_no')}</option>
+            {cands.map((c) => <option key={c.id} value={c.id}>{fmtDate(c.entry_date)} · {c.description || t(`acct.c_${c.category ?? 'other'}`)} · {fmtMoney(c.amount)}</option>)}
+          </select>
+        </Field>
+      )}
       {linked === null && <PaidBy channel={f.channel} holder={f.holder} owners={owners} onChange={(c, h) => setF({ ...f, channel: c, holder: h })} />}
       {linked && <Pill tone="ok">{t('acct.from_drawer')}</Pill>}
       <label className="flex min-h-11 items-center gap-2 text-sm">

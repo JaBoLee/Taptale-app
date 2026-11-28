@@ -52,6 +52,7 @@ export default function Stock() {
     <Page title={t('stock.title')} subtitle={mode === 'count' ? t('stock.count_hint') : t('stock.receive_hint')}>
       <Seg label={t('stock.mode')} value={mode} onChange={(v) => { setMode(v); setVals({}) }}
         options={[{ value: 'count', label: t('stock.count') }, { value: 'receive', label: t('stock.receive') }]} />
+      {mode === 'receive' && <span className="text-xs font-semibold text-tealink">{t('stock.receive_hint')}</span>}
       <Seg label={t('stock.category')} value={cat} onChange={setCat}
         options={[{ value: 'food', label: t('cat.food') }, { value: 'can_beer', label: t('cat.can_beer') }, { value: 'supply', label: t('cat.supply') }]} />
       <input className={inputCls} type="search" placeholder={t('common.search')} aria-label={t('common.search')} value={q} onChange={(e) => setQ(e.target.value)} />

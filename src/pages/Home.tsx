@@ -181,7 +181,8 @@ export default function Home() {
               </div>
             )
           })}
-          <LinkButton to="/stock?tab=receive">{t('home.market_bought')}</LinkButton>
+          <LinkButton to="/shift-close#drawer">{t('home.market_bought')}</LinkButton>
+          <span className="text-xs text-muted">{t('home.market_hint')}</span>
         </Card>
       )}
 

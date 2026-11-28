@@ -34,10 +34,11 @@
     "q_waste": "Waste/loss",
     "unavailable": "Menu items unavailable",
     "market": "Buy at the market",
-    "market_bought": "Bought · record delivery",
+    "market_bought": "Bought · record the purchase",
     "empty_kegs": "{{count}} empty keg(s) out back",
     "view": "View",
-    "owner_menu": "Owner menu"
+    "owner_menu": "Owner menu",
+    "market_hint": "Record it in Close shift → Take out → Fresh food with the items. Stock is added for you."
   },
   "lang": {
     "label": "Language"
@@ -154,7 +155,7 @@
     "count": "Count",
     "receive": "Receive",
     "count_hint": "Enter the actual amount for items you counted",
-    "receive_hint": "Enter how much arrived (added to stock)",
+    "receive_hint": "Items listed when taking cash out (Close shift) are already in stock. Do not receive them again.",
     "empty": "No items yet. Owners can add them in Owner → Items",
     "now": "In stock {{qty}} {{unit}}",
     "below": "Below minimum {{qty}} {{unit}}",
@@ -553,7 +554,9 @@
     "oc_deposit": "Bank deposit",
     "oc_adj_in": "Adjust +",
     "oc_adj_out": "Adjust −",
-    "oc_pay_hint": "Paying for goods with this cash: record it in Review receipts or Manual entry and choose \"Paid by: Owner-held cash\""
+    "oc_pay_hint": "Paying for goods with this cash: record it in Review receipts or Manual entry and choose \"Paid by: Owner-held cash\"",
+    "dup_q": "Is this receipt for a drawer cash payment already recorded?",
+    "dup_no": "No · record as a new entry"
   },
   "pay": {
     "title": "Payroll",

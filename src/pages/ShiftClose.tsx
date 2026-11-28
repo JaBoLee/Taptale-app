@@ -66,6 +66,7 @@ export default function ShiftClose() {
     setF((p) => ({ ...p, shift_code: p.shift_code || (asg as { shift_code: string | null } | null)?.shift_code || '' }))
   }, [profile])
   useEffect(() => { load() }, [load])
+  useEffect(() => { if (location.hash === '#drawer') setTimeout(() => document.getElementById('drawer')?.scrollIntoView(), 400) }, [])
 
   const close = async () => {
     if (!f.cash_close || !f.cash_open) { setMsg({ ok: false, text: t('close.need_cash') }); return }
@@ -198,7 +199,7 @@ export default function ShiftClose() {
       </Card>
 
       <Card>
-        <Row><span className="text-[15px] font-bold">{t('close.drawer')}</span>{moves.length > 0 && <Pill tone="warn">{t('close.moves_today', { n: moves.length })}</Pill>}</Row>
+        <Row><span id="drawer" className="scroll-mt-4 text-[15px] font-bold">{t('close.drawer')}</span>{moves.length > 0 && <Pill tone="warn">{t('close.moves_today', { n: moves.length })}</Pill>}</Row>
         {moves.length > 0 && (
           <div className="flex flex-col gap-1.5">
             {moves.map((x) => (
