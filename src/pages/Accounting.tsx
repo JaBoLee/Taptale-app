@@ -132,7 +132,7 @@ function ReceiptReview({ r, owners, onDone }: { r: Rcpt; owners: Member[]; onDon
           </select>
         </Field>
       )}
-      {r.kind === 'goods' && <Pill tone="warn">{t('acct.goods_by_staff')}</Pill>}
+      {r.kind === 'goods' && <span className="rounded-xl border-[1.5px] border-line bg-paper px-3 py-2 text-xs font-semibold text-tealink">✓ {t('acct.goods_by_staff')}</span>}
       {linked !== undefined && linked?.source !== 'cash_drawer' && <PaidBy channel={f.channel} holder={f.holder} owners={owners} onChange={(c, h) => setF({ ...f, channel: c, holder: h })} />}
       {linked?.source === 'cash_drawer' && <Pill tone="ok">{t('acct.from_drawer')}</Pill>}
       <label className="flex min-h-11 items-center gap-2 text-sm">
