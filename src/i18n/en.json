@@ -723,7 +723,8 @@
     "to_stock": "Add to stock",
     "stock_qty": "Stock qty",
     "in_stock": "Added to stock {{n}} {{u}}",
-    "stock_note": "Ticked \"Add to stock\" = the app records the delivery in stock for you. Do not receive it again on the Stock page."
+    "stock_note": "Ticked \"Add to stock\" = the app adds this amount to stock right away (check it is in the stock-count unit)",
+    "pack": "pack"
   },
   "xl": {
     "title": "Tap&Tale accounts",

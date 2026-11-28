@@ -64,7 +64,7 @@ export function LineEditor({ lines, onChange, stockDefault = false }: { lines: L
   const set = (i: number, patch: Partial<Line>) => onChange(lines.map((l, j) => (j === i ? auto({ ...l, ...patch }) : l)))
   const pick = (i: number, text: string) => {
     const o = opts.find((x) => x.label === text)
-    set(i, o ? { description: text, item_id: o.item_id, unit: lines[i].unit || o.unit, pack: o.pack, to_stock: lines[i].to_stock ?? stockDefault }
+    set(i, o ? { description: text, item_id: o.item_id, unit: lines[i].unit || (o.pack > 1 ? t('lines.pack') : o.unit), pack: o.pack, to_stock: lines[i].to_stock ?? stockDefault }
       : { description: text, item_id: null, to_stock: false })
   }
   const nameOf = (id: string | null) => (id ? opts.find((o) => o.item_id === id)?.name : undefined)
