@@ -220,7 +220,7 @@ Deno.serve(async (req) => {
       await writeTab(gt, files.sheet_id, tb, toRows(await allRows(sb, tb, order)))
     }
     // ตารางที่เพิ่มภายหลัง (ข้ามถ้ายังไม่มีในฐานข้อมูล)
-    for (const [tb, order] of [['payment_fixes', 'id'], ['staff_pay', 'profile_id'], ['public_holidays', 'holiday_date']] as const) {
+    for (const [tb, order] of [['payment_fixes', 'id'], ['staff_pay', 'profile_id'], ['public_holidays', 'holiday_date'], ['ledger_lines', 'created_at'], ['owner_cash_moves', 'created_at']] as const) {
       try { await writeTab(gt, files.sheet_id, tb, toRows(await allRows(sb, tb, order))); tables.push(tb) } catch (e) { console.warn(tb, String(e)) }
     }
     await writeTab(gt, files.sheet_id, 'current_stock', toRows(await allRows(sb, 'current_stock', 'item_id')))

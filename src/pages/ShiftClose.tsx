@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../lib/auth'
-import { sb, ymd, uploadPhoto, fmtMoney, fmtTime, loadShiftTypes, type ShiftType } from '../lib/db'
+import { sb, ymd, uploadPhoto, fmtMoney, fmtTime, loadShiftTypes, loadMembers, type ShiftType, type Member } from '../lib/db'
+import { LineEditor, linesTotal, toRows, validLines, type Line } from '../components/LineEditor'
 import { Button, Card, Field, Msg, Page, Pill, Row, Seg, inputCls } from '../components/ui'
 
 const REASONS_OUT = ['change', 'fresh_food', 'delivery', 'safekeep', 'other'] as const
@@ -36,7 +37,10 @@ export default function ShiftClose() {
   const [types, setTypes] = useState<ShiftType[]>([])
   const [f, setF] = useState({ work_date: ymd(), shift_code: '', bill_count: '', bill_total: '', cash_open: '', cash_close: '' })
   const [file, setFile] = useState<File | null>(null)
-  const [m, setM] = useState({ direction: 'out' as 'in' | 'out', amount: '', reason: 'fresh_food', note: '' })
+  const [m, setM] = useState({ direction: 'out' as 'in' | 'out', amount: '', reason: 'fresh_food', note: '', holder: '' })
+  const [mLines, setMLines] = useState<Line[]>([])
+  const [owners, setOwners] = useState<Member[]>([])
+  useEffect(() => { loadMembers().then((ms) => setOwners(ms.filter((x) => x.role === 'owner'))) }, [])
   const [mFile, setMFile] = useState<File | null>(null)
   const [moves, setMoves] = useState<Move[]>([])
   const [busy, setBusy] = useState(false)
@@ -101,9 +105,14 @@ export default function ShiftClose() {
   const moveNet = moves.reduce((n, x) => n + (x.direction === 'in' ? 1 : -1) * Number(x.amount), 0)
 
   const addMove = async () => {
-    if (!Number(m.amount)) { setMsg2({ ok: false, text: t('close.need_amount') }); return }
+    const withLines = m.direction === 'out' && ['fresh_food', 'delivery', 'other'].includes(m.reason)
+    const amount = Number(m.amount) || (withLines ? linesTotal(mLines) : 0)
+    if (!amount) { setMsg2({ ok: false, text: t('close.need_amount') }); return }
     if (m.reason === 'other' && !m.note.trim()) { setMsg2({ ok: false, text: t('close.need_note') }); return }
-    if (m.reason === 'safekeep' && !m.note.trim()) { setMsg2({ ok: false, text: t('close.need_who') }); return }
+    if (m.reason === 'safekeep' && !m.holder) { setMsg2({ ok: false, text: t('close.need_who') }); return }
+    const holderId = m.holder && m.holder !== 'bank' ? m.holder : null
+    const holderName = m.holder === 'bank' ? t('close.bank') : owners.find((o) => o.id === m.holder)?.display_name
+    const note = m.note.trim() || (m.reason === 'safekeep' ? holderName ?? '' : '')
     setBusy(true)
     try {
       let receiptId: string | null = null
@@ -113,10 +122,16 @@ export default function ShiftClose() {
         if (error) throw error
         receiptId = (r as { id: string }).id
       }
-      const { error } = await sb.from('cash_movements').insert({ direction: m.direction, amount: Number(m.amount), reason: m.reason, note: m.note || null, receipt_id: receiptId, created_by: profile?.id })
+      const row: Record<string, unknown> = { direction: m.direction, amount, reason: m.reason, note: note || null, receipt_id: receiptId, created_by: profile?.id }
+      if (holderId) row.holder_id = holderId
+      const { data: mv, error } = await sb.from('cash_movements').insert(row).select('id').single()
       if (error) throw error
+      if (withLines && validLines(mLines).length) {
+        const { error: le } = await sb.from('ledger_lines').insert(toRows(mLines, { cash_movement_id: (mv as { id: string }).id }))
+        if (le) throw le
+      }
       setMsg2({ ok: true, text: t('close.move_saved') })
-      setM({ ...m, amount: '', note: '' }); setMFile(null); load()
+      setM({ ...m, amount: '', note: '', holder: '' }); setMLines([]); setMFile(null); load()
     } catch { setMsg2({ ok: false, text: t('common.save_failed') }) }
     setBusy(false)
   }
@@ -213,8 +228,18 @@ export default function ShiftClose() {
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Field label={t('common.amount')}><input className={inputCls} inputMode="decimal" value={m.amount} onChange={(e) => setM({ ...m, amount: e.target.value })} /></Field>
-            <Field label={m.reason === 'safekeep' ? t('close.who') : t('common.note')}><input className={inputCls} value={m.note} placeholder={m.reason === 'safekeep' ? t('close.who_ph') : undefined} onChange={(e) => setM({ ...m, note: e.target.value })} /></Field>
+            <Field label={t('common.note')}><input className={inputCls} value={m.note} onChange={(e) => setM({ ...m, note: e.target.value })} /></Field>
           </div>
+          {(m.reason === 'safekeep' || m.direction === 'in') && (
+            <Field label={m.reason === 'safekeep' ? t('close.who') : t('close.from_owner')}>
+              <select className={inputCls} value={m.holder} onChange={(e) => setM({ ...m, holder: e.target.value })}>
+                <option value="">{m.reason === 'safekeep' ? t('common.choose') : t('close.from_none')}</option>
+                {owners.map((o) => <option key={o.id} value={o.id}>{o.display_name}</option>)}
+                {m.reason === 'safekeep' && <option value="bank">{t('close.bank')}</option>}
+              </select>
+            </Field>
+          )}
+          {m.direction === 'out' && ['fresh_food', 'delivery', 'other'].includes(m.reason) && <LineEditor lines={mLines} onChange={setMLines} />}
           <span className="text-xs text-muted">{t(m.direction === 'in' ? 'close.hint_in' : m.reason === 'safekeep' ? 'close.hint_safekeep' : m.reason === 'change' ? 'close.hint_change' : 'close.hint_expense')}</span>
           <Field label={t('close.attach_receipt')}><input key={moves.length} type="file" accept="image/*" capture="environment" className="text-sm" onChange={(e) => setMFile(e.target.files?.[0] ?? null)} /></Field>
           <Msg msg={msg2} />
