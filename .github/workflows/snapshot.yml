@@ -1,0 +1,29 @@
+# ชั่วคราว: build แอปแบบไม่มีคีย์จริง เพื่อถ่ายภาพหน้าจอทำคู่มือ (ลบ branch นี้ได้หลังใช้)
+name: Snapshot build
+on:
+  push:
+    branches: [snapshot-build]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npm run build
+        env:
+          BASE_PATH: /
+          VITE_SUPABASE_URL: https://mock.supabase.co
+          VITE_SUPABASE_ANON_KEY: mock-anon-key
+      - run: |
+          git config user.name "snapshot-bot"
+          git config user.email "snapshot-bot@users.noreply.github.com"
+          git checkout --orphan snapshot-dist
+          git rm -rq --cached .
+          git add -f dist
+          git commit -qm "snapshot dist"
+          git push -f origin snapshot-dist
