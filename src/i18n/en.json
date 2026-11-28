@@ -506,7 +506,7 @@
     "pos_replace": "Days imported before are replaced",
     "pos_done": "Imported {{n}} day(s) of sales",
     "entries": "This month",
-    "drive_note": "Receipt photos are stored in Supabase · moved to Google Drive once Google is connected",
+    "drive_note": "Receipt photos move to Google Drive at each backup (Mon/Thu 07:00) · tap an entry to see its items and receipt",
     "c_food": "Food",
     "c_beer": "Beer",
     "c_supplies": "Supplies",
