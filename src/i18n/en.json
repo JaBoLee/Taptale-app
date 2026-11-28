@@ -340,13 +340,16 @@
     "tap_date": "Tapped on",
     "received_date": "Received on",
     "glasses_per_keg": "Glasses per keg",
-    "edit_keg": "Edit tap date / glasses per keg",
+    "edit_keg": "Edit keg details (tap, size, glass, dates …)",
     "undo_hint": "Pressed “Keg empty” by mistake? Put it back on tap within 3 days",
     "emptied_at": "Marked empty {{when}}",
     "undo_btn": "Not empty · undo",
     "undo_confirm": "Put back on tap",
     "undo_done": "{{name}} is back on tap",
-    "undo_denied": "Can’t undo yet — ask an owner"
+    "undo_denied": "Can’t undo yet — ask an owner",
+    "edit_short": "Edit details",
+    "tap_taken": "Tap {{n}} already has {{name}} · move that keg first, or leave the tap number blank for now",
+    "glasses_auto": "Blank = worked out from keg and glass size (~{{n}} glasses)"
   },
   "empty": {
     "title": "Empty kegs",

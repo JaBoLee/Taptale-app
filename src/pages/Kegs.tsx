@@ -92,7 +92,75 @@ function ReadingRow({ r, keg, onDone }: { r: Reading; keg?: Keg; onDone: () => v
   )
 }
 
-function OnTapCard({ k, reading, date, onDone }: { k: Keg; reading?: Reading; date: string; onDone: () => void }) {
+/** แก้ข้อมูลถัง (หลังรับเข้า/หลังจั้ม): หัวจ่าย ชื่อ แบรนด์ ชนิด ขนาด แก้ว วันที่ แก้วต่อถัง (+ ต้นทุน เฉพาะเจ้าของ) */
+function KegEdit({ k, others, glasses, onCancel, onDone }: { k: Keg; others: Keg[]; glasses: number[]; onCancel: () => void; onDone: () => void }) {
+  const { t } = useTranslation()
+  const { profile } = useAuth()
+  const owner = profile?.role === 'owner'
+  const onTap = k.status === 'on_tap'
+  const [f, setF] = useState({ tap_no: k.tap_no != null ? String(k.tap_no) : '', beer_name: k.beer_name, brand: k.brand, keg_type: k.keg_type, size_l: String(Number(k.size_l)),
+    glass_ml: String(k.glass_ml), received: ymd(new Date(k.received_at)), tapped: ymd(k.tapped_at ? new Date(k.tapped_at) : new Date()),
+    glasses: k.expected_glasses ? String(k.expected_glasses) : '', cost: k.cost != null ? String(Number(k.cost)) : '' })
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const gl = glasses.includes(Number(f.glass_ml)) ? glasses : [...glasses, Number(f.glass_ml)].sort((a, b) => a - b)
+  const auto = defaultGlasses(Number(f.size_l) || 0, Number(f.glass_ml) || 250)
+  const keepTime = (iso: string | null, d: string) => (iso && ymd(new Date(iso)) === d ? iso : new Date(`${d}T12:00:00+07:00`).toISOString())
+  const save = async () => {
+    if (!f.beer_name.trim() || !f.brand.trim() || !(Number(f.size_l) > 0)) { setMsg({ ok: false, text: t('kegs.need') }); return }
+    const tapNo = f.tap_no.trim() ? Math.round(Number(f.tap_no)) : null
+    const clash = onTap && tapNo != null ? others.find((o) => o.id !== k.id && o.status === 'on_tap' && o.tap_no === tapNo) : undefined
+    if (clash) { setMsg({ ok: false, text: t('kegs.tap_taken', { n: tapNo, name: clash.beer_name }) }); return }
+    const row: Record<string, unknown> = { beer_name: f.beer_name.trim(), brand: f.brand.trim(), keg_type: f.keg_type, size_l: Number(f.size_l), glass_ml: Number(f.glass_ml),
+      received_at: keepTime(k.received_at, f.received), expected_glasses: Number(f.glasses) > 0 ? Math.round(Number(f.glasses)) : null }
+    if (onTap) Object.assign(row, { tap_no: tapNo, tapped_at: keepTime(k.tapped_at, f.tapped) })
+    if (owner) row.cost = f.cost.trim() ? Number(f.cost) : null
+    setBusy(true)
+    const { data, error } = await sb.from('kegs').update(row).eq('id', k.id).select('id')
+    setBusy(false)
+    if (error || !data?.length) { setMsg({ ok: false, text: t('common.save_failed') }); return }
+    onDone()
+  }
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl bg-amberbg p-3">
+      <div className="grid grid-cols-2 gap-2">
+        <Field label={t('kegs.beer')}><input className={inputCls} value={f.beer_name} onChange={(e) => setF({ ...f, beer_name: e.target.value })} /></Field>
+        <Field label={t('kegs.brand')}><input className={inputCls} value={f.brand} onChange={(e) => setF({ ...f, brand: e.target.value })} /></Field>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <Field label={t('kegs.type')}>
+          <select className={inputCls} value={f.keg_type} onChange={(e) => setF({ ...f, keg_type: e.target.value as 'pet' | 'steel' })}>
+            <option value="pet">PET</option><option value="steel">{t('kegs.steel')}</option>
+          </select>
+        </Field>
+        <Field label={t('kegs.size')}><input className={inputCls} inputMode="decimal" value={f.size_l} onChange={(e) => setF({ ...f, size_l: e.target.value })} /></Field>
+        <Field label={t('kegs.glass')}>
+          <select className={inputCls} value={f.glass_ml} onChange={(e) => setF({ ...f, glass_ml: e.target.value })}>
+            {gl.map((g) => <option key={g} value={g}>{g} ml</option>)}
+          </select>
+        </Field>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {onTap && <Field label={t('kegs.tap_no')}><input className={inputCls} inputMode="numeric" value={f.tap_no} onChange={(e) => setF({ ...f, tap_no: e.target.value })} /></Field>}
+        <Field label={t('kegs.glasses_per_keg')} hint={t('kegs.glasses_auto', { n: auto })}>
+          <input className={inputCls} inputMode="numeric" placeholder={String(auto)} value={f.glasses} onChange={(e) => setF({ ...f, glasses: e.target.value })} />
+        </Field>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Field label={t('kegs.received_date')}><input type="date" className={inputCls} max={ymd()} value={f.received} onChange={(e) => setF({ ...f, received: e.target.value || f.received })} /></Field>
+        {onTap && <Field label={t('kegs.tap_date')}><input type="date" className={inputCls} max={ymd()} value={f.tapped} onChange={(e) => setF({ ...f, tapped: e.target.value || f.tapped })} /></Field>}
+      </div>
+      {owner && <Field label={t('kegs.cost')}><input className={inputCls} inputMode="decimal" value={f.cost} onChange={(e) => setF({ ...f, cost: e.target.value })} /></Field>}
+      <Msg msg={msg} />
+      <div className="grid grid-cols-2 gap-2">
+        <Button onClick={onCancel}>{t('common.cancel')}</Button>
+        <Button variant="primary" disabled={busy} onClick={save}>{t('kegs.save_edit')}</Button>
+      </div>
+    </div>
+  )
+}
+
+function OnTapCard({ k, reading, date, others, glasses, onDone }: { k: Keg; reading?: Reading; date: string; others: Keg[]; glasses: number[]; onDone: () => void }) {
   const { t } = useTranslation()
   const [val, setVal] = useState('')
   const [busy, setBusy] = useState(false)
@@ -100,17 +168,6 @@ function OnTapCard({ k, reading, date, onDone }: { k: Keg; reading?: Reading; da
   const exp = expectedGlasses(k)
   const sold = reading?.counter ?? 0
   const [editK, setEditK] = useState(false)
-  const [kd, setKd] = useState({ tapped: ymd(k.tapped_at ? new Date(k.tapped_at) : new Date()), glasses: String(exp) })
-  const saveKeg = async () => {
-    setBusy(true)
-    const sameDay = k.tapped_at && kd.tapped === ymd(new Date(k.tapped_at))
-    const base = { tapped_at: sameDay ? k.tapped_at : new Date(`${kd.tapped}T12:00:00+07:00`).toISOString() }
-    let { data, error } = await sb.from('kegs').update({ ...base, expected_glasses: Number(kd.glasses) || null }).eq('id', k.id).select('id')
-    if (error && /expected_glasses/.test(error.message)) ({ data, error } = await sb.from('kegs').update(base).eq('id', k.id).select('id'))
-    setBusy(false)
-    if (error || !data?.length) { setMsg({ ok: false, text: t('common.save_failed') }); return }
-    setEditK(false); setMsg(null); onDone()
-  }
   const days = k.tapped_at ? Math.max((Date.now() - new Date(k.tapped_at).getTime()) / 86400000, 0.5) : 1
   const perDay = sold / days
   const left = Math.max(exp - sold, 0)
@@ -158,16 +215,7 @@ function OnTapCard({ k, reading, date, onDone }: { k: Keg; reading?: Reading; da
       </Row>
       <span className="text-xs text-muted">{reading ? t('kegs.updated', { when: fmtDateTime(reading.created_at) }) : t('kegs.no_reading')} · {t('kegs.per_day', { n: fmtNum(perDay, 1) })}</span>
       {editK ? (
-        <div className="flex flex-col gap-2 rounded-2xl bg-amberbg p-3">
-          <div className="grid grid-cols-2 gap-2">
-            <Field label={t('kegs.tap_date')}><input type="date" className={inputCls} max={ymd()} value={kd.tapped} onChange={(e) => setKd({ ...kd, tapped: e.target.value || ymd() })} /></Field>
-            <Field label={t('kegs.glasses_per_keg')}><input className={inputCls} inputMode="numeric" value={kd.glasses} onChange={(e) => setKd({ ...kd, glasses: e.target.value })} /></Field>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Button onClick={() => setEditK(false)}>{t('common.cancel')}</Button>
-            <Button variant="primary" disabled={busy} onClick={saveKeg}>{t('kegs.save_edit')}</Button>
-          </div>
-        </div>
+        <KegEdit k={k} others={others} glasses={glasses} onCancel={() => setEditK(false)} onDone={() => { setEditK(false); onDone() }} />
       ) : (
         <button type="button" onClick={() => setEditK(true)} className="min-h-11 self-start text-sm font-semibold text-amberink underline">{t('kegs.edit_keg')}</button>
       )}
@@ -192,6 +240,7 @@ export default function Kegs() {
   const [undoFor, setUndoFor] = useState<string | null>(null)
   const [undoTap, setUndoTap] = useState('')
   const [showAdd, setShowAdd] = useState(false)
+  const [editStock, setEditStock] = useState<string | null>(null)
   const [nk, setNk] = useState({ beer_name: '', brand: '', keg_type: 'pet' as 'pet' | 'steel', size_l: '20', glass_ml: '250', cost: '', received: ymd(), glasses: '' })
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [busy, setBusy] = useState(false)
@@ -261,7 +310,7 @@ export default function Kegs() {
         <span className="text-xs text-muted">{t('kegs.read_date_hint')}</span>
       </div>
       {onTap.length === 0 && <Empty>{t('kegs.none_on_tap')}</Empty>}
-      {onTap.map((k) => <OnTapCard key={k.id} k={k} reading={state.latest[k.id]} date={date} onDone={load} />)}
+      {onTap.map((k) => <OnTapCard key={k.id} k={k} reading={state.latest[k.id]} date={date} others={onTap} glasses={glasses} onDone={load} />)}
 
       {recent.length > 0 && (
         <Card className="!gap-1">
@@ -279,7 +328,9 @@ export default function Kegs() {
               <span>{k.beer_name} · {k.brand} · {k.keg_type === 'pet' ? 'PET' : t('kegs.steel')} {fmtNum(k.size_l)} L</span>
               <span className="text-xs text-muted">{t('kegs.received', { d: fmtDate(k.received_at) })}</span>
             </Row>
-            {tapFor === k.id ? (
+            {editStock === k.id ? (
+              <KegEdit k={k} others={onTap} glasses={glasses} onCancel={() => setEditStock(null)} onDone={() => { setEditStock(null); load() }} />
+            ) : tapFor === k.id ? (
               <div className="flex flex-col gap-2 rounded-xl bg-warnbg p-3">
                 <span className="text-sm font-semibold text-warn">{t('kegs.reset_reminder')}</span>
                 <div className="grid grid-cols-2 gap-2">
@@ -292,7 +343,10 @@ export default function Kegs() {
                 </div>
               </div>
             ) : (
-              <Button small onClick={() => setTapFor(k.id)}>{t('kegs.tap_btn')}</Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button small onClick={() => setEditStock(k.id)}>{t('kegs.edit_short')}</Button>
+                <Button small onClick={() => setTapFor(k.id)}>{t('kegs.tap_btn')}</Button>
+              </div>
             )}
           </div>
         ))}
