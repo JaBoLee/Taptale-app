@@ -11,12 +11,32 @@ create table if not exists public.ledger_lines (
   unit_price numeric(12,2) not null default 0,
   amount numeric(12,2) not null,
   sort int not null default 0,
+  to_stock boolean not null default false,                       -- รับเข้าสต๊อกอัตโนมัติเมื่อบันทึก
+  stock_qty numeric(12,3),                                       -- จำนวนเข้าสต๊อก (หน่วยนับของสินค้า)
+  stock_event_id uuid references public.stock_events(id) on delete set null,
   created_by uuid references public.profiles(id) default auth.uid(),
   created_at timestamptz not null default now(),
   check (ledger_id is not null or cash_movement_id is not null)
 );
 create index if not exists ledger_lines_ledger_idx on public.ledger_lines (ledger_id);
 create index if not exists ledger_lines_move_idx on public.ledger_lines (cash_movement_id);
+
+-- รายการสินค้าที่จับคู่กับสินค้าในร้าน + ติ๊กรับเข้าสต๊อก → บันทึก "รับเข้า" ในสต๊อกให้อัตโนมัติ (ครั้งเดียวต่อบรรทัด)
+create or replace function public.ledger_line_to_stock() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare ev uuid;
+begin
+  if new.to_stock and new.item_id is not null and coalesce(new.stock_qty, 0) > 0 and new.stock_event_id is null then
+    insert into stock_events (item_id, kind, qty, reason, note, created_by)
+    values (new.item_id, 'receive', new.stock_qty, 'receipt', new.description, coalesce(new.created_by, auth.uid()))
+    returning id into ev;
+    new.stock_event_id := ev;
+  end if;
+  return new;
+end $$;
+drop trigger if exists ledger_line_to_stock on public.ledger_lines;
+create trigger ledger_line_to_stock before insert on public.ledger_lines
+  for each row execute function public.ledger_line_to_stock();
 alter table public.ledger_lines enable row level security;
 drop policy if exists owner_all on public.ledger_lines;
 create policy owner_all on public.ledger_lines for all using (public.is_owner()) with check (public.is_owner());

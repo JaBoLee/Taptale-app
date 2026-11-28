@@ -705,7 +705,11 @@
     "n_items": "{{n}} items",
     "mismatch": "Items total {{a}} does not match the entry {{b}}",
     "none": "No items yet",
-    "edit": "Edit vendor / doc no. / items"
+    "edit": "Edit vendor / doc no. / items",
+    "to_stock": "Add to stock",
+    "stock_qty": "Stock qty",
+    "in_stock": "Added to stock {{n}} {{u}}",
+    "stock_note": "Ticked \"Add to stock\" = the app records the delivery in stock for you. Do not receive it again on the Stock page."
   },
   "xl": {
     "title": "Tap&Tale accounts",

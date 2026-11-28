@@ -239,7 +239,7 @@ export default function ShiftClose() {
               </select>
             </Field>
           )}
-          {m.direction === 'out' && ['fresh_food', 'delivery', 'other'].includes(m.reason) && <LineEditor lines={mLines} onChange={setMLines} />}
+          {m.direction === 'out' && ['fresh_food', 'delivery', 'other'].includes(m.reason) && <LineEditor lines={mLines} onChange={setMLines} stockDefault />}
           <span className="text-xs text-muted">{t(m.direction === 'in' ? 'close.hint_in' : m.reason === 'safekeep' ? 'close.hint_safekeep' : m.reason === 'change' ? 'close.hint_change' : 'close.hint_expense')}</span>
           <Field label={t('close.attach_receipt')}><input key={moves.length} type="file" accept="image/*" capture="environment" className="text-sm" onChange={(e) => setMFile(e.target.files?.[0] ?? null)} /></Field>
           <Msg msg={msg2} />
