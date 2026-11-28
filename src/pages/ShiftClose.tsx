@@ -119,7 +119,7 @@ export default function ShiftClose() {
       let receiptId: string | null = null
       if (mFile) {
         const path = await uploadPhoto(mFile, 'receipts')
-        const { data: r, error } = await sb.from('receipts').insert({ photo_path: path, supplier_hint: t(`close.r_${m.reason}`), note: m.note || null, uploaded_by: profile?.id }).select('id').single()
+        const { data: r, error } = await sb.from('receipts').insert({ photo_path: path, supplier_hint: t(`close.r_${m.reason}`), note: m.note || null, uploaded_by: profile?.id, kind: 'cash' }).select('id').single()
         if (error) throw error
         receiptId = (r as { id: string }).id
       }

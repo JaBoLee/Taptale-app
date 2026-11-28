@@ -1,5 +1,5 @@
 import { Fragment, useMemo, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { sb, pickName, fmtNum, fmtDateTime } from '../lib/db'
 import { useStockData, isLow, qtyOf, type Item } from '../lib/stock'
@@ -17,13 +17,14 @@ export default function Stock() {
   const { t } = useTranslation()
   const loc = useLocation()
   const { data, reload } = useStockData()
-  const [mode, setMode] = useState<Mode>(new URLSearchParams(loc.search).get('tab') === 'receive' ? 'receive' : 'count')
+  const mode: Mode = 'count'
   const [cat, setCat] = useState<Cat>('food')
   const [q, setQ] = useState('')
   const [vals, setVals] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
+  const toReceive = new URLSearchParams(loc.search).get('tab') === 'receive'
   const list = useMemo(() => {
     if (!data) return []
     const s = q.trim().toLowerCase()
@@ -48,11 +49,10 @@ export default function Stock() {
     setBusy(false)
   }
 
+  if (toReceive) return <Navigate to="/receipt" replace />
   return (
     <Page title={t('stock.title')} subtitle={mode === 'count' ? t('stock.count_hint') : t('stock.receive_hint')}>
-      <Seg label={t('stock.mode')} value={mode} onChange={(v) => { setMode(v); setVals({}) }}
-        options={[{ value: 'count', label: t('stock.count') }, { value: 'receive', label: t('stock.receive') }]} />
-      {mode === 'receive' && <span className="text-xs font-semibold text-tealink">{t('stock.receive_hint')}</span>}
+      <LinkButton to="/receipt">{t('stock.goto_receive')}</LinkButton>
       <Seg label={t('stock.category')} value={cat} onChange={setCat}
         options={[{ value: 'food', label: t('cat.food') }, { value: 'can_beer', label: t('cat.can_beer') }, { value: 'supply', label: t('cat.supply') }]} />
       <input className={inputCls} type="search" placeholder={t('common.search')} aria-label={t('common.search')} value={q} onChange={(e) => setQ(e.target.value)} />

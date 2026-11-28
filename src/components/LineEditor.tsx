@@ -7,7 +7,7 @@ import { inputCls } from './ui'
 export interface Line { item_id: string | null; description: string; qty: string; unit: string; unit_price: string
   to_stock?: boolean; stock_qty?: string; pack?: number; stock_edited?: boolean; stock_event_id?: string | null }
 export interface LineRow { id?: string; item_id: string | null; description: string; qty: number; unit: string | null; unit_price: number; amount: number; sort?: number
-  ledger_id?: string | null; cash_movement_id?: string | null; stock_qty?: number | null; stock_event_id?: string | null }
+  ledger_id?: string | null; cash_movement_id?: string | null; receipt_id?: string | null; stock_qty?: number | null; stock_event_id?: string | null }
 
 export const emptyLine = (): Line => ({ item_id: null, description: '', qty: '1', unit: '', unit_price: '' })
 export const lineAmount = (l: Line) => Math.round((Number(l.qty) || 0) * (Number(l.unit_price) || 0) * 100) / 100
@@ -15,16 +15,17 @@ export const validLines = (ls: Line[]) => ls.filter((l) => l.description.trim() 
 export const linesTotal = (ls: Line[]) => validLines(ls).reduce((n, l) => n + lineAmount(l), 0)
 export const fromRows = (rs: LineRow[]): Line[] => rs.map((r) => ({ item_id: r.item_id, description: r.description, qty: String(Number(r.qty)), unit: r.unit ?? '',
   unit_price: String(Number(r.unit_price)), stock_qty: r.stock_qty != null ? String(Number(r.stock_qty)) : '', stock_event_id: r.stock_event_id ?? null, to_stock: false }))
-export const toRows = (ls: Line[], link: { ledger_id?: string; cash_movement_id?: string }) =>
+export const toRows = (ls: Line[], link: { ledger_id?: string; cash_movement_id?: string; receipt_id?: string }) =>
   validLines(ls).map((l, i) => ({ ...link, item_id: l.item_id, description: l.description.trim(), qty: Number(l.qty), unit: l.unit.trim() || null,
     unit_price: Number(l.unit_price) || 0, amount: lineAmount(l), sort: i,
     to_stock: !!(l.to_stock && l.item_id && !l.stock_event_id && Number(l.stock_qty) > 0),
     stock_qty: l.item_id && Number(l.stock_qty) > 0 ? Number(l.stock_qty) : null, stock_event_id: l.stock_event_id ?? null }))
 
 /** บันทึกรายการสินค้าของรายการบัญชี (ลบของเดิมที่ผูกกับรายการนี้แล้วใส่ใหม่) */
-export async function saveLedgerLines(ledgerId: string, ls: Line[], cashMoveId?: string | null) {
+export async function saveLedgerLines(ledgerId: string, ls: Line[], cashMoveId?: string | null, receiptId?: string | null) {
   await sb.from('ledger_lines').delete().eq('ledger_id', ledgerId)
   if (cashMoveId) await sb.from('ledger_lines').delete().eq('cash_movement_id', cashMoveId)
+  if (receiptId) await sb.from('ledger_lines').delete().eq('receipt_id', receiptId)
   const rows = toRows(ls, { ledger_id: ledgerId })
   if (!rows.length) return null
   const { error } = await sb.from('ledger_lines').insert(rows)

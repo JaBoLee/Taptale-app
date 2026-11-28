@@ -1,9 +1,19 @@
+-- 0) ใบรับของ/ใบเสร็จที่พนักงานคีย์ตอนรับของ (kind = goods): ผู้ขาย เลขที่ ยอด → ระบบลงบัญชีให้ แล้วเจ้าของตรวจ
+alter table public.receipts add column if not exists kind text not null default 'photo';
+alter table public.receipts drop constraint if exists receipts_kind_check;
+alter table public.receipts add constraint receipts_kind_check check (kind in ('photo','goods','cash'));
+alter table public.receipts add column if not exists supplier_id uuid references public.suppliers(id);
+alter table public.receipts add column if not exists vendor text;
+alter table public.receipts add column if not exists doc_no text;
+alter table public.receipts add column if not exists amount numeric(12,2) check (amount is null or amount >= 0);
+
 -- 1) รายการสินค้าในแต่ละรายการบัญชี (รายจ่าย = สินค้าที่ซื้อตามใบเสร็จ · รายรับ = เตรียมไว้ใช้ภายหลัง)
 --    ผูกกับรายการบัญชี (ledger_id) หรือกับรายการนำเงินออกจากลิ้นชักที่พนักงานกรอกตอนปิดกะ (cash_movement_id)
 create table if not exists public.ledger_lines (
   id uuid primary key default gen_random_uuid(),
   ledger_id uuid references public.ledger(id) on delete cascade,
   cash_movement_id uuid references public.cash_movements(id) on delete cascade,
+  receipt_id uuid references public.receipts(id) on delete cascade,      -- ใบรับของที่พนักงานคีย์
   item_id uuid references public.items(id) on delete set null,   -- สินค้าในฐานข้อมูลร้าน (ถ้าจับคู่ได้)
   description text not null,                                     -- ชื่อตามใบเสร็จ
   qty numeric(12,3) not null default 1 check (qty > 0),
@@ -16,10 +26,11 @@ create table if not exists public.ledger_lines (
   stock_event_id uuid references public.stock_events(id) on delete set null,
   created_by uuid references public.profiles(id) default auth.uid(),
   created_at timestamptz not null default now(),
-  check (ledger_id is not null or cash_movement_id is not null)
+  check (ledger_id is not null or cash_movement_id is not null or receipt_id is not null)
 );
 create index if not exists ledger_lines_ledger_idx on public.ledger_lines (ledger_id);
 create index if not exists ledger_lines_move_idx on public.ledger_lines (cash_movement_id);
+create index if not exists ledger_lines_receipt_idx on public.ledger_lines (receipt_id);
 
 -- รายการสินค้าที่จับคู่กับสินค้าในร้าน + ติ๊กรับเข้าสต๊อก → บันทึก "รับเข้า" ในสต๊อกให้อัตโนมัติ (ครั้งเดียวต่อบรรทัด)
 create or replace function public.ledger_line_to_stock() returns trigger
@@ -31,6 +42,9 @@ begin
     values (new.item_id, 'receive', new.stock_qty, 'receipt', new.description, coalesce(new.created_by, auth.uid()))
     returning id into ev;
     new.stock_event_id := ev;
+    -- ของที่สั่งไว้ (หน้าสั่งซื้อ) ถือว่ารับแล้วเมื่อพนักงานคีย์เข้า
+    update purchase_marks pm set status = 'received'
+    from supplier_products sp where sp.id = pm.supplier_product_id and sp.item_id = new.item_id and pm.status = 'ordered';
   end if;
   return new;
 end $$;
@@ -42,11 +56,29 @@ drop policy if exists owner_all on public.ledger_lines;
 create policy owner_all on public.ledger_lines for all using (public.is_owner()) with check (public.is_owner());
 drop policy if exists staff_insert_own_move on public.ledger_lines;
 create policy staff_insert_own_move on public.ledger_lines for insert with check (
-  public.is_member() and ledger_id is null
-  and exists (select 1 from public.cash_movements m where m.id = cash_movement_id and m.created_by = auth.uid()));
+  public.is_member() and ledger_id is null and (
+    exists (select 1 from public.cash_movements m where m.id = cash_movement_id and m.created_by = auth.uid())
+    or exists (select 1 from public.receipts r where r.id = receipt_id and r.uploaded_by = auth.uid())));
 drop policy if exists staff_read_own_move on public.ledger_lines;
 create policy staff_read_own_move on public.ledger_lines for select using (
-  public.is_member() and exists (select 1 from public.cash_movements m where m.id = cash_movement_id and m.created_by = auth.uid()));
+  public.is_member() and (
+    exists (select 1 from public.cash_movements m where m.id = cash_movement_id and m.created_by = auth.uid())
+    or exists (select 1 from public.receipts r where r.id = receipt_id and r.uploaded_by = auth.uid())));
+
+-- ใบรับของ (goods) → ลงบัญชีรายจ่ายให้ทันที (ช่องทางจ่ายว่างไว้ เจ้าของเลือกตอนตรวจ)
+create or replace function public.goods_receipt_to_ledger() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.kind = 'goods' and coalesce(new.amount, 0) > 0 then
+    insert into ledger (entry_date, direction, amount, category, vendor, doc_no, description, source, receipt_id, created_by)
+    values ((new.created_at at time zone 'Asia/Bangkok')::date, 'expense', new.amount, 'food',
+            coalesce(new.vendor, new.supplier_hint), new.doc_no, new.note, 'receipt', new.id, new.uploaded_by);
+  end if;
+  return new;
+end $$;
+drop trigger if exists goods_receipt_to_ledger on public.receipts;
+create trigger goods_receipt_to_ledger after insert on public.receipts
+  for each row execute function public.goods_receipt_to_ledger();
 
 -- 2) เลขที่เอกสาร + จ่ายด้วยเงินสดที่เจ้าของถือ (แยกรายคน)
 alter table public.ledger add column if not exists doc_no text;

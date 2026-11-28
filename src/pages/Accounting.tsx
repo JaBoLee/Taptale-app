@@ -8,7 +8,8 @@ import { Button, Card, Empty, Field, Msg, Page, Pill, Row, Seg, inputCls } from 
 interface Entry { id: string; entry_date: string; direction: 'income' | 'expense'; amount: number; vat: number | null; has_tax_invoice: boolean | null
   category: string | null; vendor: string | null; description: string | null; source: string; receipt_id: string | null; channel?: 'cash' | 'transfer' | 'owner_cash' | null
   doc_no?: string | null; holder_id?: string | null; cash_movement_id?: string | null }
-interface Rcpt { id: string; photo_path: string; supplier_hint: string | null; note: string | null; created_at: string; uploaded_by: string }
+interface Rcpt { id: string; photo_path: string; supplier_hint: string | null; note: string | null; created_at: string; uploaded_by: string
+  kind?: string; vendor?: string | null; doc_no?: string | null; amount?: number | null }
 
 const CATS = ['food', 'beer', 'supplies', 'utilities', 'rent', 'wages', 'transport', 'sales', 'keg_sale', 'other']
 
@@ -43,10 +44,10 @@ function PaidBy({ channel, holder, owners, income, onChange }: { channel: string
 function ReceiptReview({ r, owners, onDone }: { r: Rcpt; owners: Member[]; onDone: () => void }) {
   const { t } = useTranslation()
   const [url, setUrl] = useState<string | null>(null)
-  const [f, setF] = useState({ vendor: r.supplier_hint ?? '', doc_no: '', entry_date: r.created_at.slice(0, 10), amount: '', vat: '', has_tax_invoice: false, category: 'food',
+  const [f, setF] = useState({ vendor: r.vendor ?? r.supplier_hint ?? '', doc_no: r.doc_no ?? '', entry_date: r.created_at.slice(0, 10), amount: r.amount ? String(Number(r.amount)) : '', vat: '', has_tax_invoice: false, category: 'food',
     channel: 'transfer' as 'cash' | 'transfer' | 'owner_cash', holder: '' })
   const [lines, setLines] = useState<Line[]>([])
-  const [linked, setLinked] = useState<{ id: string; cash_movement_id: string | null } | null | undefined>(undefined)
+  const [linked, setLinked] = useState<{ id: string; cash_movement_id: string | null; source?: string } | null | undefined>(undefined)
   const [cands, setCands] = useState<{ id: string; cash_movement_id: string | null; amount: number; entry_date: string; description: string | null; category: string | null }[]>([])
   useEffect(() => {
     // กันลงซ้ำ: ใบเสร็จที่ถ่ายแยก แต่ซื้อด้วยเงินสดจากลิ้นชักที่บันทึกตอนนำเงินออกไปแล้ว
@@ -58,7 +59,7 @@ function ReceiptReview({ r, owners, onDone }: { r: Rcpt; owners: Member[]; onDon
   const linkTo = async (id: string) => {
     const c = cands.find((x) => x.id === id)
     if (!c) { setLinked(null); setLines([]); return }
-    setLinked({ id: c.id, cash_movement_id: c.cash_movement_id })
+    setLinked({ id: c.id, cash_movement_id: c.cash_movement_id, source: 'cash_drawer' })
     setF((v) => ({ ...v, amount: String(c.amount), category: c.category ?? v.category }))
     if (c.cash_movement_id) {
       const { data: ls } = await sb.from('ledger_lines').select('*').eq('cash_movement_id', c.cash_movement_id).order('sort')
@@ -68,16 +69,14 @@ function ReceiptReview({ r, owners, onDone }: { r: Rcpt; owners: Member[]; onDon
   const [picked, setPicked] = useState('')
   useEffect(() => {
     // ใบเสร็จที่แนบมากับ "นำเงินออกจากลิ้นชัก": มีรายการบัญชีเงินสด + รายการสินค้าที่พนักงานกรอกไว้แล้ว
-    sb.from('ledger').select('id, cash_movement_id, amount').eq('receipt_id', r.id).limit(1).then(async ({ data }) => {
-      const l = (data as { id: string; cash_movement_id: string | null; amount: number }[] | null)?.[0] ?? null
+    // ใบรับของที่พนักงานคีย์ (goods) ระบบลงบัญชีไว้แล้ว + มีรายการสินค้าแล้ว → เจ้าของตรวจ/แก้/เลือกช่องทางจ่าย
+    sb.from('ledger').select('id, cash_movement_id, amount, source').eq('receipt_id', r.id).limit(1).then(async ({ data }) => {
+      const l = (data as { id: string; cash_movement_id: string | null; amount: number; source: string }[] | null)?.[0] ?? null
       setLinked(l)
-      if (l) {
-        setF((v) => ({ ...v, amount: String(Number(l.amount)) }))
-        if (l.cash_movement_id) {
-          const { data: ls } = await sb.from('ledger_lines').select('*').eq('cash_movement_id', l.cash_movement_id).order('sort')
-          if (ls && ls.length) setLines(fromRows(ls as LineRow[]))
-        }
-      }
+      if (l) setF((v) => ({ ...v, amount: String(Number(l.amount)) }))
+      const q = l?.cash_movement_id ? sb.from('ledger_lines').select('*').eq('cash_movement_id', l.cash_movement_id) : sb.from('ledger_lines').select('*').eq('receipt_id', r.id)
+      const { data: ls } = await q.order('sort')
+      if (ls && ls.length) setLines(fromRows(ls as LineRow[]))
     })
   }, [r.id])
   const [busy, setBusy] = useState(false)
@@ -85,21 +84,22 @@ function ReceiptReview({ r, owners, onDone }: { r: Rcpt; owners: Member[]; onDon
 
   const post = async () => {
     const amount = Number(f.amount) || linesTotal(lines)
-    if (!amount || (f.channel === 'owner_cash' && !f.holder && !linked)) return
+    const fromDrawer = linked?.source === 'cash_drawer'
+    if (!amount || (f.channel === 'owner_cash' && !f.holder && !fromDrawer)) return
     setBusy(true)
     const row = { entry_date: f.entry_date, direction: 'expense', amount, vat: f.vat ? Number(f.vat) : null,
       has_tax_invoice: f.has_tax_invoice, category: f.category, vendor: f.vendor || null, doc_no: f.doc_no || null }
     // มีรายการบัญชีเงินสดจากลิ้นชักอยู่แล้ว → แก้รายการเดิม ไม่ลงซ้ำ
     let id = linked?.id ?? null
     let error = null
-    if (id) ({ error } = await sb.from('ledger').update(row).eq('id', id))
+    if (id) ({ error } = await sb.from('ledger').update(fromDrawer ? row : { ...row, channel: f.channel, holder_id: f.channel === 'owner_cash' ? f.holder : null }).eq('id', id))
     else {
       const res = await sb.from('ledger').insert({ ...row, description: r.note, source: 'receipt', receipt_id: r.id, channel: f.channel,
         holder_id: f.channel === 'owner_cash' ? f.holder : null }).select('id').single()
       error = res.error; id = (res.data as { id: string } | null)?.id ?? null
     }
     if (!error && id && picked) await sb.from('ledger').update({ receipt_id: r.id }).eq('id', id)
-    if (!error && id) error = await saveLedgerLines(id, lines, linked?.cash_movement_id)
+    if (!error && id) error = await saveLedgerLines(id, lines, linked?.cash_movement_id, r.id)
     if (!error) await sb.from('receipts').update({ status: 'posted', ocr: { vendor: f.vendor, amount, vat: f.vat ? Number(f.vat) : null } }).eq('id', r.id)
     setBusy(false); onDone()
   }
@@ -124,7 +124,7 @@ function ReceiptReview({ r, owners, onDone }: { r: Rcpt; owners: Member[]; onDon
           {CATS.map((c) => <option key={c} value={c}>{t(`acct.c_${c}`)}</option>)}
         </select>
       </Field>
-      {cands.length > 0 && (linked === null || picked) && (
+      {cands.length > 0 && r.kind !== 'goods' && (linked === null || picked) && (
         <Field label={t('acct.dup_q')}>
           <select className={inputCls} value={picked} onChange={(e) => { setPicked(e.target.value); linkTo(e.target.value) }}>
             <option value="">{t('acct.dup_no')}</option>
@@ -132,14 +132,15 @@ function ReceiptReview({ r, owners, onDone }: { r: Rcpt; owners: Member[]; onDon
           </select>
         </Field>
       )}
-      {linked === null && <PaidBy channel={f.channel} holder={f.holder} owners={owners} onChange={(c, h) => setF({ ...f, channel: c, holder: h })} />}
-      {linked && <Pill tone="ok">{t('acct.from_drawer')}</Pill>}
+      {r.kind === 'goods' && <Pill tone="warn">{t('acct.goods_by_staff')}</Pill>}
+      {linked !== undefined && linked?.source !== 'cash_drawer' && <PaidBy channel={f.channel} holder={f.holder} owners={owners} onChange={(c, h) => setF({ ...f, channel: c, holder: h })} />}
+      {linked?.source === 'cash_drawer' && <Pill tone="ok">{t('acct.from_drawer')}</Pill>}
       <label className="flex min-h-11 items-center gap-2 text-sm">
         <input type="checkbox" className="h-5 w-5 accent-amberink" checked={f.has_tax_invoice} onChange={(e) => setF({ ...f, has_tax_invoice: e.target.checked })} />{t('acct.tax_invoice')}
       </label>
       <div className="grid grid-cols-2 gap-2">
         <Button disabled={busy} onClick={reject}>{t('acct.reject')}</Button>
-        <Button variant="primary" disabled={busy || !(Number(f.amount) || linesTotal(lines)) || (f.channel === 'owner_cash' && !f.holder && !linked)} onClick={post}>{t('acct.post')}</Button>
+        <Button variant="primary" disabled={busy || !(Number(f.amount) || linesTotal(lines)) || (f.channel === 'owner_cash' && !f.holder && linked?.source !== 'cash_drawer')} onClick={post}>{t('acct.post')}</Button>
       </div>
     </div>
   )
@@ -162,7 +163,7 @@ function EntryDetail({ e, lines, onSaved }: { e: Entry; lines: LineRow[]; onSave
     if (!edit) return
     setBusy(true)
     await sb.from('ledger').update({ vendor: edit.vendor || null, doc_no: edit.doc_no || null }).eq('id', e.id)
-    await saveLedgerLines(e.id, edit.lines, e.cash_movement_id)
+    await saveLedgerLines(e.id, edit.lines, e.cash_movement_id, e.receipt_id)
     setBusy(false); setEdit(null); onSaved()
   }
   if (edit) return (
@@ -205,7 +206,7 @@ async function exportForAccountant(month: string, entries: Entry[], lines: LineR
   }
   const cat = (c: string | null) => t(`acct.c_${c ?? 'other'}`)
   const ch = (e: Entry) => (e.channel ? t(`acct.ch_${e.channel}`) + (e.channel === 'owner_cash' ? ` (${owners.find((o) => o.id === e.holder_id)?.display_name ?? ''})` : '') : '')
-  const linesOf = (e: Entry) => { const own = lines.filter((l) => l.ledger_id === e.id); return own.length ? own : lines.filter((l) => e.cash_movement_id && l.cash_movement_id === e.cash_movement_id) }
+  const linesOf = (e: Entry) => { const own = lines.filter((l) => l.ledger_id === e.id); return own.length ? own : lines.filter((l) => (e.cash_movement_id && l.cash_movement_id === e.cash_movement_id) || (e.receipt_id && l.receipt_id === e.receipt_id)) }
   const asc = [...entries].sort((a, b) => a.entry_date.localeCompare(b.entry_date))
   const exp = asc.filter((e) => e.direction === 'expense'), inc = asc.filter((e) => e.direction === 'income')
   const sum = (xs: Entry[]) => Math.round(xs.reduce((n, e) => n + e.amount, 0) * 100) / 100
@@ -373,19 +374,20 @@ export default function Accounting() {
     const { from, to } = monthRange(month)
     const [{ data: e }, { data: p }] = await Promise.all([
       sb.from('ledger').select('*').gte('entry_date', from).lt('entry_date', to).order('entry_date', { ascending: false }),
-      sb.from('receipts').select('id, photo_path, supplier_hint, note, created_at, uploaded_by').eq('status', 'pending').order('created_at'),
+      sb.from('receipts').select('*').eq('status', 'pending').order('created_at'),
     ])
     const es = ((e as Entry[]) ?? []).map((x) => ({ ...x, amount: Number(x.amount) }))
     setEntries(es)
     setPending((p as Rcpt[]) ?? [])
     // รายการสินค้าของรายการบัญชีเดือนนี้ (ของรายการบัญชีเอง + ที่พนักงานกรอกตอนนำเงินออก)
-    const ids = es.map((x) => x.id), mids = es.map((x) => x.cash_movement_id).filter(Boolean) as string[]
+    const ids = es.map((x) => x.id), mids = es.map((x) => x.cash_movement_id).filter(Boolean) as string[], rids = es.map((x) => x.receipt_id).filter(Boolean) as string[]
     const chunks = <T,>(xs: T[]) => Array.from({ length: Math.ceil(xs.length / 100) }, (_, i) => xs.slice(i * 100, i * 100 + 100))
     const res = await Promise.all([
       ...chunks(ids).map((c) => sb.from('ledger_lines').select('*').in('ledger_id', c)),
       ...chunks(mids).map((c) => sb.from('ledger_lines').select('*').in('cash_movement_id', c)),
+      ...chunks(rids).map((c) => sb.from('ledger_lines').select('*').in('receipt_id', c)),
     ])
-    setLines(res.flatMap((r) => (r.data as LineRow[]) ?? []))
+    setLines([...new Map(res.flatMap((r) => (r.data as LineRow[]) ?? []).map((l) => [l.id, l])).values()])
   }, [month])
   useEffect(() => { load() }, [load])
 
@@ -394,7 +396,7 @@ export default function Accounting() {
 
   const linesOf = (e: Entry) => {
     const own = lines.filter((l) => l.ledger_id === e.id)
-    return (own.length ? own : lines.filter((l) => e.cash_movement_id && l.cash_movement_id === e.cash_movement_id)).sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))
+    return (own.length ? own : lines.filter((l) => (e.cash_movement_id && l.cash_movement_id === e.cash_movement_id) || (e.receipt_id && l.receipt_id === e.receipt_id))).sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))
   }
   const ownerName = (id: string | null | undefined) => owners.find((o) => o.id === id)?.display_name ?? ''
   const manualOk = !!(Number(mf.amount) || linesTotal(mLines)) && !(mf.channel === 'owner_cash' && !mf.holder)

@@ -9,7 +9,7 @@ interface Mark { id: string; supplier_product_id: string; packs: number | null; 
 
 export default function Orders() {
   const { t } = useTranslation()
-  const { data, reload } = useStockData()
+  const { data } = useStockData()
   const [marks, setMarks] = useState<Mark[]>([])
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
@@ -30,19 +30,6 @@ export default function Orders() {
     const { error } = await sb.from('purchase_marks').insert({ supplier_product_id: spId, packs })
     setMsg(error ? { ok: false, text: t('common.save_failed') } : { ok: true, text: t('orders.marked') })
     await loadMarks()
-    pushOrders()
-    setBusy(false)
-  }
-
-  const markReceived = async (m: Mark) => {
-    const sp = data.products.find((p) => p.id === m.supplier_product_id)
-    if (!sp) return
-    setBusy(true)
-    const qty = (m.packs ?? 1) * sp.pack_qty
-    const a = await sb.from('stock_events').insert({ item_id: sp.item_id, kind: 'receive', qty, note: 'order' })
-    const b = await sb.from('purchase_marks').update({ status: 'received' }).eq('id', m.id)
-    setMsg(a.error || b.error ? { ok: false, text: t('common.save_failed') } : { ok: true, text: t('orders.received_ok') })
-    await Promise.all([loadMarks(), reload()])
     pushOrders()
     setBusy(false)
   }
@@ -82,6 +69,7 @@ export default function Orders() {
 
       <Card>
         <span className="text-[15px] font-semibold">{t('orders.waiting')}</span>
+        <span className="text-xs text-muted">{t('orders.waiting_hint')}</span>
         {marks.length === 0 && <Empty>{t('common.none')}</Empty>}
         {marks.map((m) => {
           const sp = data.products.find((p) => p.id === m.supplier_product_id)
@@ -91,7 +79,7 @@ export default function Orders() {
                 <span className="font-semibold">{sp?.product_name ?? '–'}</span>
                 <span className="text-xs text-muted">{t('orders.packs', { n: m.packs ?? 1 })} · {fmtDateTime(m.created_at)}</span>
               </div>
-              <Button small variant="primary" disabled={busy} onClick={() => markReceived(m)}>{t('orders.receive')}</Button>
+              <Pill tone="warn">{t('orders.wait_staff')}</Pill>
             </div>
           )
         })}

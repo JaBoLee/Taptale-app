@@ -30,7 +30,7 @@
     "pending_owner": "{{count}} sign-up(s) waiting for approval",
     "review": "Review",
     "q_close": "Close shift",
-    "q_receipt": "Receipt",
+    "q_receipt": "Receive / Receipt",
     "q_waste": "Waste/loss",
     "unavailable": "Menu items unavailable",
     "market": "Buy at the market",
@@ -164,7 +164,8 @@
     "saved": "Saved {{count}} item(s)",
     "no_location": "No storage spot yet",
     "progress": "Filled {{done}} of {{total}}",
-    "low_count": "Below minimum: {{count}}"
+    "low_count": "Below minimum: {{count}}",
+    "goto_receive": "Goods arrived? → Receive goods (key in from the receipt)"
   },
   "waste": {
     "title": "Waste / loss",
@@ -288,7 +289,9 @@
     "waiting": "Ordered, awaiting delivery",
     "receive": "Received",
     "received_ok": "Received and added to stock",
-    "sheet_note": "The same list goes to the Google Sheet \"to order\" tab once Google is connected"
+    "sheet_note": "The same list goes to the Google Sheet \"to order\" tab once Google is connected",
+    "wait_staff": "Waiting",
+    "waiting_hint": "No need to press received: staff key in the delivery (Receive goods), stock goes up by the real quantity and this closes itself"
   },
   "kegs": {
     "title": "Draft beer",
@@ -476,7 +479,14 @@
     "today": "Sent today",
     "st_pending": "Pending",
     "st_posted": "Posted",
-    "st_rejected": "Rejected"
+    "st_rejected": "Rejected",
+    "title_goods": "Receive goods",
+    "goods_hint": "Take a photo of the receipt / delivery note, then key in what actually arrived. Stock goes up right away, the accounts are done for you and the owner is asked to check.",
+    "need_vendor": "Choose who delivered",
+    "need_amount": "Enter the amount or key in the items",
+    "sent_goods": "Saved · stock added · waiting for owner check",
+    "send_goods": "Save delivery",
+    "cash_hint": "Paid with drawer cash (e.g. market shopping)? Record it in"
   },
   "acct": {
     "title": "Accounts",
@@ -556,7 +566,8 @@
     "oc_adj_out": "Adjust −",
     "oc_pay_hint": "Paying for goods with this cash: record it in Review receipts or Manual entry and choose \"Paid by: Owner-held cash\"",
     "dup_q": "Is this receipt for a drawer cash payment already recorded?",
-    "dup_no": "No · record as a new entry"
+    "dup_no": "No · record as a new entry",
+    "goods_by_staff": "Received by staff · stock added · check the amount and choose how it was paid"
   },
   "pay": {
     "title": "Payroll",
